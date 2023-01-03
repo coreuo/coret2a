@@ -1,6 +1,4 @@
-﻿using Packets.Server;
-
-namespace Packets;
+﻿namespace Packets;
 
 public interface ITransfer<TData>
     where TData : IData
@@ -71,6 +69,7 @@ public interface ITransfer<TData>
     {
         switch (packetId)
         {
+            // ReSharper disable StringLiteralTypo
             case 0x00: return "0x00 PACKET_LOGIN";
             case 0x01: return "0x01 PACKET_LOGOUT";
             case 0x02: return "0x02 PACKET_REQ_MOVE";
@@ -258,6 +257,7 @@ public interface ITransfer<TData>
             case 0xB8: return "0xB8 PACKET_CHAR_PROFILE";
             case 0xB9: return "0xB9 PACKET_FEATURES";
             default: return $"0x{packetId:X2} INVALID";
+            // ReSharper restore StringLiteralTypo
         }
     }
 #endif

@@ -3,7 +3,7 @@
 namespace Server.Login;
 
 [Entity("Login", "State")]
-public interface IState<TAccount>
+public interface IState<out TAccount>
     where TAccount : IAccount
 {
     TAccount Account { get; }

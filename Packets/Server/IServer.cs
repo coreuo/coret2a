@@ -25,15 +25,13 @@ public interface IServer<in TState, in TData>
     {
         if (state.Seed != 0) return;
 #if DEBUG
-        DebugIncoming($"0x?? SEED");
+        DebugIncoming("0x?? SEED");
 #endif
         state.ReadClientSeed(data);
 
         data.ReadEnd();
 
         PacketSeed(state);
-
-        return;
     }
 #if DEBUG
     private static void DebugIncoming(string text)

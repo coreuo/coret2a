@@ -1,10 +1,9 @@
 ﻿using Core.Abstract.Attributes;
-using Server.Login;
 
 namespace Server.Shard;
 
 [Entity("Shard", "State")]
-public interface IState<TAccount>
+public interface IState<out TAccount>
     where TAccount : IAccount
 {
     TAccount Account { get; }

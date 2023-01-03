@@ -4,10 +4,9 @@ using Core.Abstract.Extensions;
 namespace Server.Shard;
 
 [Entity("Shard", "Server")]
-public interface IShard<TState, TAccount, TCharacter>
+public interface IShard<in TState, TAccount>
     where TState : IState<TAccount>
     where TAccount : IAccount
-    where TCharacter : IMobile
 {
     void Listen();
 

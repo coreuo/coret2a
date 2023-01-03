@@ -3,8 +3,7 @@
 namespace Compression
 {
     [Entity("Shard", "Server")]
-    public interface IShard<TData>
-        where TData : IData
+    public interface IShard
     {
     }
 }

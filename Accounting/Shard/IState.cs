@@ -3,7 +3,7 @@
 namespace Accounting.Shard;
 
 [Entity("Shard", "State")]
-public interface IState<TAccount, TCharacter, TCharacterCollection>
+public interface IState<TAccount, in TCharacter, TCharacterCollection>
     where TAccount : IAccount<TCharacter, TCharacterCollection>
     where TCharacter : ICharacter
     where TCharacterCollection : ICollection<TCharacter>

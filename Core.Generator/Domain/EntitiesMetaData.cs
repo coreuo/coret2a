@@ -7,10 +7,6 @@ namespace Core.Generator.Domain
     {
         private readonly HashSet<EntityMetaData> _collection = new HashSet<EntityMetaData>();
 
-        public EntitiesMetaData()
-        {
-        }
-
         public void Add(string fullName, string name, bool cached = false, bool synchronized = false)
         {
             var record = new EntityMetaData(fullName, name, cached, synchronized);

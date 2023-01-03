@@ -60,7 +60,7 @@ public class Save : Save<Save>, ISave<Save>
 }}
 ";
 
-            return ($"Save.cs", @class);
+            return ("Save.cs", @class);
         }
 
         private static IEnumerable<Func<(string name, string content)>> CreateImplementations(Compilation compilation, EntitiesMetaData entitiesMetaData)
@@ -72,17 +72,18 @@ public class Save : Save<Save>, ISave<Save>
                 .ToList();
 
             var implementations = interfaces
-                .GroupBy(g => g.GetEntitySubject(), (k, l) => new
+                .GroupBy(g => g.GetEntitySubject(), (k, l) => (k, l.ToImmutableList()))
+                .Select(g => new
                 {
-                    Subject = k,
-                    Categories = l
+                    Subject = g.k,
+                    Categories = g.Item2
                         .Where(i => i.HasEntityVariant())
                         .GroupBy(i => i.GetEntityVariant(), (m, n) => new
                         {
                             Variant = m,
                             Interfaces = n
                         }),
-                    General = l.Where(i => !i.HasEntityVariant())
+                    General = g.Item2.Where(i => !i.HasEntityVariant())
                 })
                 .ToList();
 
@@ -107,7 +108,7 @@ public class Save : Save<Save>, ISave<Save>
 
         private static Func<(string name, string content)> CreateImplementation(string name, ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> interfaceDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData)
         {
-            entitiesMetaData.Add($"Launcher.Domain.{name}", name, false, interfaceDictionary.Keys.Any(i => i.GetAttributes().Any(a => a.AttributeClass?.Name == "SynchronizedAttribute")));
+            entitiesMetaData.Add($"Launcher.Domain.{name}", name, false, interfaceDictionary.Keys.Any(i => i.GetAttributes().Any(a => a.IsSynchronizedAttribute())));
 
             var inheritance = interfaceDictionary.Select(i => ((INamedTypeSymbol)i.Key).ResolveTypeParameters(p => i.Value[p])).ToList();
 
@@ -130,7 +131,7 @@ using Core.Abstract.Domain;
 namespace Launcher.Domain;
 
 public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
-    {string.Join($@",
+    {string.Join(@",
     ", inheritance)}
 {{  
     public Pool<Save, {name}> Pool {{ get; }}

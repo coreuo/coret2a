@@ -1,13 +1,11 @@
 ﻿using Core.Abstract.Attributes;
 using Packets.Login.Incoming;
 using Packets.Login.Outgoing;
-using Packets.Server.Incoming;
 
 namespace Packets.Login;
 
 [Entity("Login", "State")]
-public interface IState<TData, TAccount, TShard> : Server.IState<TData>,
-    IClientSeed,
+public interface IState<in TData, TAccount, TShard> : Server.IState<TData>,
     ILoginRequest,
     IHardwareInfo,
     ISelectedShard<TShard>,

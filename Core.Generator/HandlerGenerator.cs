@@ -40,7 +40,7 @@ namespace {labels.@namespace};
 
             var rootType = $"T{root}";
 
-            var rootName = $"{char.ToLower(root[0])}{root.Substring(1, @root.Length - 1)}";
+            var rootName = $"{char.ToLower(root[0])}{root.Substring(1, root.Length - 1)}";
 
             var types = new[] { rootType }.Concat(@interface.TypeParameters.Select(p => p.Name));
 

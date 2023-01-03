@@ -4,7 +4,7 @@ using Core.Abstract.Extensions;
 namespace Server.Login
 {
     [Entity("Login", "Server")]
-    public interface ILogin<TState, TAccount>
+    public interface ILogin<in TState, TAccount>
         where TState : IState<TAccount>
         where TAccount : IAccount
     {

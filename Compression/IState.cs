@@ -3,7 +3,7 @@
 namespace Compression
 {
     [Entity("Shard", "State")]
-    public interface IState<TData>
+    public interface IState<in TData>
         where TData : IData
     {
         [Priority(0.9)]

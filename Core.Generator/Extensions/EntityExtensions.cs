@@ -95,16 +95,6 @@ namespace Core.Generator.Extensions
             return symbol.GetAttributes().Any(IsEntityAttribute);
         }
 
-        public static bool HasSynchronizedAttribute(this INamedTypeSymbol symbol)
-        {
-            return symbol.GetAttributes().Any(IsSynchronizedAttribute);
-        }
-
-        public static bool HasOrderedAttribute(this INamedTypeSymbol symbol)
-        {
-            return symbol.GetAttributes().Any(IsOrderedAttribute);
-        }
-
         public static AttributeData GetEntityAttribute(this INamedTypeSymbol symbol)
         {
             return symbol.GetAttributes().Single(IsEntityAttribute);
@@ -118,11 +108,6 @@ namespace Core.Generator.Extensions
         public static bool IsSynchronizedAttribute(this AttributeData attribute)
         {
             return attribute.AttributeClass?.Name == "SynchronizedAttribute";
-        }
-
-        public static bool IsOrderedAttribute(this AttributeData attribute)
-        {
-            return attribute.AttributeClass?.Name == "OrderedAttribute";
         }
 
         /*public static bool IsPool(this INamedTypeSymbol symbol)
