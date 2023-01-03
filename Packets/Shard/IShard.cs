@@ -51,7 +51,7 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
 
                 state.ReadCharacterSlot(data);
 
-                state.ReadClientSeed(data);
+                state.ReadSeed(data);
 
                 EndIncomingPacket(data);
 

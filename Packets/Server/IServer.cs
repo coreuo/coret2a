@@ -27,7 +27,7 @@ public interface IServer<in TState, in TData>
 #if DEBUG
         DebugIncoming("0x?? SEED");
 #endif
-        state.ReadClientSeed(data);
+        state.ReadSeed(data);
 
         data.ReadEnd();
 

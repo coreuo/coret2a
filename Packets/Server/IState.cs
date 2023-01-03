@@ -1,10 +1,9 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Server.Incoming;
 
 namespace Packets.Server;
 
 [Entity("State")]
-public interface IState<in TData> : IClientSeed
+public interface IState<in TData> : ISeed
     where TData : IData
 {
     void Send(TData data);
