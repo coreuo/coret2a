@@ -11,4 +11,8 @@
 		<ProjectReference Include="..\Core.Generator\Core.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Login\Shared\" />
+	</ItemGroup>
+
 </Project>

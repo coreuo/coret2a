@@ -67,7 +67,7 @@ public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount
     {
         var data = BeginOutgoingNoSizePacket(0x82);
 
-        state.WriteLoginFailedReason(data);
+        state.WriteReason(data);
 
         EndOutgoingNoSizePacket(data);
 

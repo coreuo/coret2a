@@ -9,7 +9,7 @@ public interface IState<in TData, TAccount, TShard> : Server.IState<TData>,
     ILoginRequest,
     IHardwareInfo,
     ISelectedShard<TShard>,
-    ILoginFailedReason
+    IReason
     where TData : IData
     where TAccount : IAccount
     where TShard : IShard
