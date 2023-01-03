@@ -1,0 +1,23 @@
+{
+  "profiles": {
+    "Core.Generator": {
+      "commandName": "Project"
+    },
+    "Network.Server": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Network.Server\\Network.Server.csproj"
+    },
+    "Launcher": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Launcher\\Launcher.csproj"
+    },
+    "Encryption": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Encryption\\Encryption.csproj"
+    },
+    "Network": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Network\\Network.csproj"
+    }
+  }
+}
