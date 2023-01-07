@@ -31,7 +31,7 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     var loginAccount = save.LoginAccountStore.Lease();
 
-    "Admin".CopyTo(loginAccount.Username);
+    "Admin".CopyTo(loginAccount.Name);
 
     "password".CopyTo(loginAccount.Password);
 
@@ -49,7 +49,7 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     var shardAccount = save.ShardAccountStore.Lease();
 
-    "Admin".CopyTo(shardAccount.Username);
+    "Admin".CopyTo(shardAccount.Name);
 
     shard.Accounts.Add(shardAccount);
 

@@ -8,7 +8,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     ITransfer<TData>,
     ICityList,
     IGameTime,
-    IUsername,
+    IName,
     IPassword,
     IAccessKey
     where TLogin : ILogin<TData>
@@ -46,7 +46,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
         {
             case 0x00:
             {
-                ReadUsername(data);
+                ReadName(data);
 
                 ReadPassword(data);
 
@@ -97,7 +97,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
             {
                 state.ReadCharacterPattern(data);
                 
-                state.ReadUsername(data);
+                state.ReadName(data);
 
                 state.ReadPassword(data);
 
@@ -115,7 +115,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
             {
                 state.ReadAccessKey(data);
 
-                state.ReadUsername(data);
+                state.ReadName(data);
 
                 state.ReadPassword(data);
 
@@ -156,7 +156,11 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
         character.WriteBody(data);
 
-        character.WriteLocation(data);
+        character.WriteX(data);
+
+        character.WriteY(data);
+
+        character.WriteShortZ(data);
 
         character.WriteDirection(data);
 
@@ -202,7 +206,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
         character.WriteDirection(data);
 
-        character.WriteZ(data);
+        character.WriteSByteZ(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -308,7 +312,11 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
         character.WriteBody(data);
 
-        character.WriteLocation(data);
+        character.WriteX(data);
+
+        character.WriteY(data);
+
+        character.WriteSByteZ(data);
 
         character.WriteDirection(data);
 
@@ -328,13 +336,17 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     [Priority(1.0)]
     public void OnPacketOpenPaperDoll(TState state)
     {
+        var character = state.Character;
+
         var data = BeginOutgoingNoSizePacket(0x88);
 
-        state.Character.WriteId(data);
+        character.WriteId(data);
 
-        state.Character.WriteName(data);
+        character.WriteName(data);
 
-        state.Character.WriteStatus(data);
+        data.Offset += 30;
+
+        character.WriteStatus(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -360,7 +372,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     {
         var data = BeginInternalOutgoingNoSizePacket(0x01);
 
-        state.Account.WriteUsername(data);
+        state.Account.WriteName(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -372,7 +384,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     {
         var data = BeginInternalOutgoingNoSizePacket(0x02);
 
-        state.Account.WriteUsername(data);
+        state.Account.WriteName(data);
 
         EndOutgoingNoSizePacket(data);
 

@@ -8,26 +8,6 @@ public interface ILocation
 
     sbyte Z { get; set; }
 
-    internal void ReadLocation<TData>(TData data)
-        where TData : IData
-    {
-        ReadX(data);
-
-        ReadY(data);
-
-        ReadZ(data);
-    }
-
-    internal void WriteLocation<TData>(TData data)
-        where TData : IData
-    {
-        WriteX(data);
-
-        WriteY(data);
-
-        WriteZ(data);
-    }
-
     internal void WriteX<TData>(TData data)
         where TData : IData
     {
@@ -52,15 +32,27 @@ public interface ILocation
         Y = data.ReadUShort();
     }
 
-    internal void WriteZ<TData>(TData data)
+    internal void WriteSByteZ<TData>(TData data)
         where TData : IData
     {
         data.WriteSByte(Z);
     }
 
-    internal void ReadZ<TData>(TData data)
+    internal void WriteShortZ<TData>(TData data)
+        where TData : IData
+    {
+        data.WriteShort(Z);
+    }
+
+    internal void ReadSByteZ<TData>(TData data)
         where TData : IData
     {
         Z = data.ReadSByte();
+    }
+
+    internal void ReadShortZ<TData>(TData data)
+        where TData : IData
+    {
+        Z = (sbyte)data.ReadShort();
     }
 }

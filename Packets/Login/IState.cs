@@ -5,7 +5,7 @@ namespace Packets.Login;
 
 [Entity("Login", "State")]
 public interface IState<in TData, TAccount, TShard> : Server.IState<TData>,
-    IUsername,
+    IName,
     IPassword,
     ILoginKey,
     IShardSelect<TShard>,

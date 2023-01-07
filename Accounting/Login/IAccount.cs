@@ -7,7 +7,7 @@ namespace Accounting.Login;
 public interface IAccount
 {
     [Size(30)]
-    Span<char> Username { get; }
+    Span<char> Name { get; }
 
     [Size(30)]
     Span<char> Password { get; }

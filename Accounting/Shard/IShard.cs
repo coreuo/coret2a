@@ -14,7 +14,7 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
 #if DEBUG
     string Identity { get; }
 #endif
-    [Size(30)] Span<char> Username { get; }
+    [Size(30)] Span<char> Name { get; }
 
     [Size(30)] Span<char> Password { get; }
 
@@ -33,13 +33,13 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
     [Priority(0.9)]
     public void OnInternalShardAuthorization()
     {
-        var account = Accounts.SingleOrDefault(a => Is.Equal(a.Username, Username))!;
+        var account = Accounts.SingleOrDefault(a => Is.Equal(a.Name, Name))!;
 
         if (Is.Default(account))
         {
             account = LeaseAccount();
 
-            Username.CopyTo(account.Username);
+            Name.CopyTo(account.Name);
         }
         
         Password.CopyTo(account.Password);
@@ -50,7 +50,7 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
     [Priority(0.9)]
     public void OnPacketPostLogin(TState state)
     {
-        var account = Accounts.SingleOrDefault(a => a.AccessKey == state.AccessKey && Is.Equal(a.Username, state.Name) && Is.Equal(a.Password, state.Password))!;
+        var account = Accounts.SingleOrDefault(a => a.AccessKey == state.AccessKey && Is.Equal(a.Name, state.Name) && Is.Equal(a.Password, state.Password))!;
 
         if (Is.Default(account) || account.AccessKey == 0) state.Account = default!;
 

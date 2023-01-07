@@ -5,7 +5,7 @@ namespace Packets.Shard;
 
 [Entity("Shard", "Account")]
 public interface IAccount<TCharacter, out TCharacterCollection> :
-    IUsername,
+    IName,
     ICharacterList<TCharacter, TCharacterCollection>
     where TCharacter : IMobile
     where TCharacterCollection : ICollection<TCharacter>

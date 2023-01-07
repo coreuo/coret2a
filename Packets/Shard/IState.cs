@@ -8,7 +8,7 @@ public interface IState<in TData, out TAccount, out TMobile, out TMobileCollecti
     IAccessKey,
     ICharacterSlot,
     ITipRequest,
-    IUsername,
+    IName,
     IPassword,
     ICombat,
     IDirection,

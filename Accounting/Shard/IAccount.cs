@@ -8,7 +8,7 @@ public interface IAccount<TCharacter, out TCharacterCollection>
     where TCharacterCollection : ICollection<TCharacter>
 {
     [Size(30)]
-    Span<char> Username { get; }
+    Span<char> Name { get; }
 
     [Size(30)]
     Span<char> Password { get; }

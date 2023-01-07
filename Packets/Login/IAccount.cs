@@ -5,7 +5,7 @@ namespace Packets.Login;
 
 [Entity("Login", "Account")]
 public interface IAccount :
-    IUsername,
+    IName,
     IPassword,
     IAccessKey
 {

@@ -4,8 +4,8 @@ using Packets.Login.Features;
 namespace Packets.Login;
 
 [Entity("Login", "Server")]
-public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> : 
-    IUsername,
+public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
+    IName,
     IPassword,
     IStatus,
     ITransfer<TData>,
@@ -38,7 +38,7 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
         {
             case 0x01:
             {
-                ReadUsername(data);
+                ReadName(data);
 
                 EndIncomingPacket(data);
 
@@ -48,7 +48,7 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
             }
             case 0x02:
             {
-                ReadUsername(data);
+                ReadName(data);
 
                 EndIncomingPacket(data);
 
@@ -71,7 +71,7 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
         {
             case 0x80:
             {
-                state.ReadUsername(data);
+                state.ReadName(data);
 
                 state.ReadPassword(data);
 
@@ -150,7 +150,7 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
     {
         var data = BeginInternalOutgoingNoSizePacket(0x00);
 
-        state.Account.WriteUsername(data);
+        state.Account.WriteName(data);
 
         state.Account.WritePassword(data);
 

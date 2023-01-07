@@ -12,7 +12,7 @@ public interface IState<TShard, TAccount>
     TShard Shard { get; set; }
 
     [Size(30)]
-    Span<char> Username { get; }
+    Span<char> Name { get; }
 
     [Size(30)]
     Span<char> Password { get; }
