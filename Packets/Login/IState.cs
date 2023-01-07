@@ -1,18 +1,21 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Login.Incoming;
-using Packets.Login.Outgoing;
+using Packets.Login.Features;
 
 namespace Packets.Login;
 
 [Entity("Login", "State")]
 public interface IState<in TData, TAccount, TShard> : Server.IState<TData>,
-    ILoginRequest,
+    IUsername,
+    IPassword,
+    ILoginKey,
+    IShardSelect<TShard>,
     IHardwareInfo,
-    ISelectedShard<TShard>,
-    IReason
+    IStatus
     where TData : IData
     where TAccount : IAccount
-    where TShard : IShard
+    where TShard : IShard<TData>
 {
+    int Id { get; }
+
     TAccount Account { get; set; }
 }

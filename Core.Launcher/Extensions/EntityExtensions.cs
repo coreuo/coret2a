@@ -65,6 +65,62 @@ public static class EntityExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe bool GetFlag<TEntity>(this TEntity entity, int index, int flag)
+        where TEntity : IEntity
+    {
+        return (*entity.GetBytePointer(index) & (1 << flag)) > 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void SetFlag<TEntity>(this TEntity entity, int index, int flag, bool value)
+        where TEntity : IEntity
+    {
+        *entity.GetBytePointer(index) |= (byte)(1 << flag);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe sbyte GetSByte<TEntity>(this TEntity entity, int index)
+        where TEntity : IEntity
+    {
+        return *entity.GetSBytePointer(index);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void SetSByte<TEntity>(this TEntity entity, int index, sbyte value)
+        where TEntity : IEntity
+    {
+        *entity.GetSBytePointer(index) = value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static unsafe sbyte* GetSBytePointer<TEntity>(this TEntity entity, int index)
+        where TEntity : IEntity
+    {
+        return (sbyte*)entity.GetPointer(index);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe ushort GetUInt16<TEntity>(this TEntity entity, int index)
+        where TEntity : IEntity
+    {
+        return *entity.GetUInt16Pointer(index);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void SetUInt16<TEntity>(this TEntity entity, int index, ushort value)
+        where TEntity : IEntity
+    {
+        *entity.GetUInt16Pointer(index) = value;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static unsafe ushort* GetUInt16Pointer<TEntity>(this TEntity entity, int index)
+        where TEntity : IEntity
+    {
+        return (ushort*)entity.GetPointer(index);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe int GetInt32<TEntity>(this TEntity entity, int index)
         where TEntity : IEntity
     {

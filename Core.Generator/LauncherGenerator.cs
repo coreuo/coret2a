@@ -116,7 +116,9 @@ public class Save : Save<Save>, ISave<Save>
 
             var propertyNames = new HashSet<string>();
 
-            var properties = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedProperties().Select(p => p.ResolveEntityProperty(name, metaData, i.Value, entitiesMetaData, propertiesMetaData, propertyNames)).Where(l => l != null)).ToList();
+            var flagDictionary = new Dictionary<string, int>();
+
+            var properties = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedProperties().Select(p => p.ResolveEntityProperty(name, metaData, i.Value, entitiesMetaData, propertiesMetaData, propertyNames, flagDictionary)).Where(l => l != null)).ToList();
 
             var calls = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedMethods(false).Select(m => (((INamedTypeSymbol)i.Key).ResolveHandlers(name, i.Value), new ResolvedMethod(m, i.Value, true), m))).GroupBy(i => i.Item2, g => g).ToImmutableDictionary(g => g.Key, g => g.Select(i => (i.Item1, i.m)).ToImmutableList());
 
@@ -143,7 +145,7 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
         get => this.GetInt32(0);
         set => this.SetInt32(0, value);
     }}
-    {string.Join(Environment.NewLine, properties)}
+    {string.Join(Environment.NewLine, properties.Select(p => p()))}
 
     public {name}(Pool<Save, {name}> pool, int id)
     {{

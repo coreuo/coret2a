@@ -1,19 +1,30 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Shard.Outgoing;
+using Packets.Shard.Features;
 
 namespace Packets.Shard;
 
 [Entity("Shard", "Server")]
-public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollection> :
+public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap> :
     ITransfer<TData>,
     ICityList,
-    IGameTime
-    where TState : IState<TData, TAccount, TMobile, TMobileCollection>
+    IGameTime,
+    IUsername,
+    IPassword,
+    IAccessKey
+    where TLogin : ILogin<TData>
+    where TState : IState<TData, TAccount, TMobile, TMobileCollection, TMap>
     where TData : IData
     where TAccount : IAccount<TMobile, TMobileCollection>
-    where TMobile : IMobile
+    where TMobile : IMobile<TMap>
     where TMobileCollection : ICollection<TMobile>
+    where TMap : IMap
 {
+#if DEBUG
+    string Identity { get; }
+#endif
+    [Link("LoginServer.Shards.Owner")]
+    TLogin Login { get; }
+
     void PacketPreLogin(TState state);
 
     void PacketPostLogin(TState state);
@@ -21,6 +32,35 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     void PacketRequestTip(TState state);
 
     void PacketRequestMove(TState state);
+
+    void PacketRequestObjectUse(TState state);
+
+    void InternalShardAuthorization();
+
+    [Priority(1.0)]
+    public void OnInternalReceived(TData data)
+    {
+        var id = BeginInternalIncomingPacket(data);
+
+        switch (id)
+        {
+            case 0x00:
+            {
+                ReadUsername(data);
+
+                ReadPassword(data);
+
+                ReadAccessKey(data);
+
+                EndIncomingPacket(data);
+
+                InternalShardAuthorization();
+
+                return;
+            }
+            default: throw new InvalidOperationException($"Unknown internal 0x{id:X2}.");
+        }
+    }
 
     [Priority(1.0)]
     public void OnPacketReceived(TState state, TData data)
@@ -35,7 +75,7 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
             {
                 state.ReadDirection(data);
 
-                state.ReadSequence(data);
+                state.ReadStatus(data);
 
                 EndIncomingPacket(data);
 
@@ -43,11 +83,23 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
 
                 return;
             }
+            case 0x06:
+            {
+                state.ReadTarget(data);
+
+                EndIncomingPacket(data);
+
+                PacketRequestObjectUse(state);
+
+                return;
+            }
             case 0x5D:
             {
                 state.ReadCharacterPattern(data);
                 
-                state.ReadCredentials(data);
+                state.ReadUsername(data);
+
+                state.ReadPassword(data);
 
                 state.ReadCharacterSlot(data);
 
@@ -63,7 +115,9 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
             {
                 state.ReadAccessKey(data);
 
-                state.ReadCredentials(data);
+                state.ReadUsername(data);
+
+                state.ReadPassword(data);
 
                 EndIncomingPacket(data);
 
@@ -90,9 +144,31 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     [Priority(1.0)]
     public void OnPacketLoginConfirm(TState state)
     {
+        var character = state.Character;
+
+        var map = character.Map;
+
         var data = BeginOutgoingNoSizePacket(0x1B);
 
-        state.Character.WriteLoginConfirm(data);
+        character.WriteId(data);
+
+        data.WriteInt(0);
+
+        character.WriteBody(data);
+
+        character.WriteLocation(data);
+
+        character.WriteDirection(data);
+
+        map.WriteByteAreaId(data);
+
+        data.WriteInt(0);
+
+        map.WriteArea(data);
+
+        data.WriteInt(0);
+
+        data.WriteShort(0);
 
         EndOutgoingNoSizePacket(data);
 
@@ -102,9 +178,31 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     [Priority(1.0)]
     public void OnPacketZMove(TState state)
     {
+        var character = state.Character;
+
+        var map = character.Map;
+
         var data = BeginOutgoingNoSizePacket(0x20);
 
-        state.Character.WriteZMove(data);
+        character.WriteId(data);
+
+        character.WriteBody(data);
+
+        data.WriteByte(0);
+
+        character.WriteHue(data);
+
+        character.WriteStatus(data);
+
+        character.WriteX(data);
+
+        character.WriteY(data);
+
+        map.WriteUShortAreaId(data);
+
+        character.WriteDirection(data);
+
+        character.WriteZ(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -116,7 +214,7 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     {
         var data = BeginOutgoingNoSizePacket(0x22);
 
-        state.WriteSequence(data);
+        state.WriteStatus(data);
 
         state.Character.WriteNotoriety(data);
 
@@ -128,11 +226,13 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     [Priority(1.0)]
     public void OnPacketLight(TState state)
     {
+        var character = state.Character;
+
         var data = BeginOutgoingNoSizePacket(0x4E);
 
-        state.Character.WriteSerial(data);
+        character.WriteId(data);
 
-        state.Character.WriteLight(data);
+        character.WriteLight(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -200,11 +300,43 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
     [Priority(1.0)]
     public void OnPacketEquippedMobile(TState state)
     {
+        var character = state.Character;
+
         var data = BeginOutgoingPacket(0x78);
 
-        state.Character.WriteEquippedMobile(data);
+        character.WriteId(data);
+
+        character.WriteBody(data);
+
+        character.WriteLocation(data);
+
+        character.WriteDirection(data);
+
+        character.WriteHue(data);
+
+        character.WriteStatus(data);
+
+        character.WriteNotoriety(data);
+
+        data.WriteInt(0);
 
         EndOutgoingPacket(data);
+
+        state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketOpenPaperDoll(TState state)
+    {
+        var data = BeginOutgoingNoSizePacket(0x88);
+
+        state.Character.WriteId(data);
+
+        state.Character.WriteName(data);
+
+        state.Character.WriteStatus(data);
+
+        EndOutgoingNoSizePacket(data);
 
         state.Send(data);
     }
@@ -221,5 +353,40 @@ public interface IShard<in TState, TData, TAccount, TMobile, out TMobileCollecti
         EndOutgoingPacket(data);
 
         state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnInternalShardAccountOnline(TState state)
+    {
+        var data = BeginInternalOutgoingNoSizePacket(0x01);
+
+        state.Account.WriteUsername(data);
+
+        EndOutgoingNoSizePacket(data);
+
+        SendToLogin(data);
+    }
+
+    [Priority(1.0)]
+    public void OnInternalShardAccountOffline(TState state)
+    {
+        var data = BeginInternalOutgoingNoSizePacket(0x02);
+
+        state.Account.WriteUsername(data);
+
+        EndOutgoingNoSizePacket(data);
+
+        SendToLogin(data);
+    }
+    private void SendToLogin(TData data)
+    {
+        Login.SendInternal(data);
+
+        Debug($"internal sent {data.Length} bytes");
+    }
+
+    private void Debug(string text)
+    {
+        Console.WriteLine($"[{Identity}] {text}");
     }
 }

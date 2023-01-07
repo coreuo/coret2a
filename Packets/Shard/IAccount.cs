@@ -1,10 +1,11 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Shard.Outgoing;
+using Packets.Shard.Features;
 
 namespace Packets.Shard;
 
-[Entity("Account")]
+[Entity("Shard", "Account")]
 public interface IAccount<TCharacter, out TCharacterCollection> :
+    IUsername,
     ICharacterList<TCharacter, TCharacterCollection>
     where TCharacter : IMobile
     where TCharacterCollection : ICollection<TCharacter>

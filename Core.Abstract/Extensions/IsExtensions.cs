@@ -11,7 +11,7 @@ public static class Is
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool Equal(Span<char> x, Span<char> y)
+    public static bool Equal(ReadOnlySpan<char> x, ReadOnlySpan<char> y)
     {
         return x.AsText().Equals(y.AsText(), StringComparison.InvariantCulture);
     }

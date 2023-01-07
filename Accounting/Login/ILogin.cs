@@ -4,22 +4,41 @@ using Core.Abstract.Extensions;
 namespace Accounting.Login;
 
 [Entity("Login", "Server")]
-public interface ILogin<in TState, TShard, TAccount, out TAccountCollection>
-    where TState : IState<TShard, TAccount, TAccountCollection>
-    where TShard : IShard<TAccount, TAccountCollection>
+public interface ILogin<TState, TShard, TAccount, out TAccountCollection>
+    where TState : IState<TShard, TAccount>
+    where TShard : IShard
     where TAccount : IAccount
     where TAccountCollection : ICollection<TAccount>
 {
+#if DEBUG
+    string Identity { get; }
+#endif
+    [Size(30)] Span<char> Username { get; }
+
     TAccountCollection Accounts { get; }
+
+    TAccountCollection Initiated { get; }
+
+    TAccountCollection Online { get; }
+
+    void InternalShardAuthorization(TState state);
 
     [Priority(0.9)]
     public void OnPacketAccountLoginRequest(TState state)
     {
-        var account = Accounts.SingleOrDefault(a => Is.Equal(a.Name, state.Name) && Is.Equal(a.Password, state.Password));
+        var account = Accounts.SingleOrDefault(a => Is.Equal(a.Username, state.Username) && Is.Equal(a.Password, state.Password))!;
 
-        if (Is.Default(account)) state.Reason = 0x00;
+        if (Is.Default(account)) state.Status = 0x00;
 
-        else state.Account = account!;
+        else if (Initiated.Contains(account) || Online.Contains(account)) state.Status = 0x01;
+
+        else
+        {
+#if DEBUG
+            Debug($"{account.Username} initiated login");
+#endif
+            Initiated.Add(state.Account = account);
+        }
     }
 
     [Priority(0.9)]
@@ -27,6 +46,43 @@ public interface ILogin<in TState, TShard, TAccount, out TAccountCollection>
     {
         state.Account.GenerateAccessKey();
 
-        state.Shard.Accounts.Add(state.Account);
+        InternalShardAuthorization(state);
     }
+
+    [Priority(1.0)]
+    public void OnInternalShardAccountOnline()
+    {
+        var account = Accounts.Single(a => Is.Equal(a.Username, Username));
+#if DEBUG
+        Debug($"{account.Username} is online");
+#endif
+        Online.Add(account);
+    }
+
+    [Priority(1.0)]
+    public void OnInternalShardAccountOffline()
+    {
+        var account = Accounts.Single(a => Is.Equal(a.Username, Username));
+#if DEBUG
+        Debug($"{account.Username} is offline");
+#endif
+        Online.Remove(account);
+    }
+
+    [Priority(0.9)]
+    public void OnDisconnected(TState state)
+    {
+#if DEBUG
+        Debug($"{state.Account.Username} disposed login");
+#endif
+        Initiated.Remove(state.Account);
+
+        state.Account = default!;
+    }
+#if DEBUG
+    private void Debug(string text)
+    {
+        Console.WriteLine($"[{Identity}] {text}");
+    }
+#endif
 }

@@ -1,23 +1,64 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Login.Outgoing;
+using Packets.Login.Features;
 
 namespace Packets.Login;
 
 [Entity("Login", "Server")]
-public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount> : 
+public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> : 
+    IUsername,
+    IPassword,
+    IStatus,
     ITransfer<TData>,
     IShardList<TShard, TShardCollection>
     where TState : IState<TData, TAccount, TShard>
     where TData : IData
-    where TShard : IShard
+    where TShard : IShard<TData>
     where TShardCollection : ICollection<TShard>
     where TAccount : IAccount
 {
+#if DEBUG
+    string Identity { get; }
+#endif
     void PacketAccountLoginRequest(TState state);
 
     void PacketHardwareInfo(TState state);
 
     void PacketBritanniaSelect(TState state);
+
+    void InternalShardAccountOnline();
+
+    void InternalShardAccountOffline();
+
+    [Priority(1.0)]
+    public void OnInternalReceived(TData data)
+    {
+        var id = BeginInternalIncomingPacket(data);
+
+        switch (id)
+        {
+            case 0x01:
+            {
+                ReadUsername(data);
+
+                EndIncomingPacket(data);
+
+                InternalShardAccountOnline();
+
+                return;
+            }
+            case 0x02:
+            {
+                ReadUsername(data);
+
+                EndIncomingPacket(data);
+
+                InternalShardAccountOffline();
+
+                return;
+            }
+            default: throw new InvalidOperationException($"Unknown internal 0x{id:X2}.");
+        }
+    }
 
     [Priority(1.0)]
     public void OnPacketReceived(TState state, TData data)
@@ -30,7 +71,11 @@ public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount
         {
             case 0x80:
             {
-                state.ReadLoginRequest(data);
+                state.ReadUsername(data);
+
+                state.ReadPassword(data);
+
+                state.ReadLoginKey(data);
 
                 EndIncomingPacket(data);
 
@@ -40,7 +85,7 @@ public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount
             }
             case 0xA0:
             {
-                state.ReadSelectedShard(data);
+                state.ReadShard(data);
 
                 EndIncomingPacket(data);
 
@@ -67,7 +112,7 @@ public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount
     {
         var data = BeginOutgoingNoSizePacket(0x82);
 
-        state.WriteReason(data);
+        state.WriteStatus(data);
 
         EndOutgoingNoSizePacket(data);
 
@@ -98,5 +143,33 @@ public interface ILogin<in TState, TData, TShard, out TShardCollection, TAccount
         EndOutgoingNoSizePacket(data);
 
         state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnInternalShardAuthorization(TState state)
+    {
+        var data = BeginInternalOutgoingNoSizePacket(0x00);
+
+        state.Account.WriteUsername(data);
+
+        state.Account.WritePassword(data);
+
+        state.Account.WriteAccessKey(data);
+
+        EndOutgoingNoSizePacket(data);
+
+        SendToShard(state, data);
+    }
+
+    private void SendToShard(TState state, TData data)
+    {
+        state.Shard.SendInternal(data);
+
+        Debug($"internal sent {data.Length} bytes");
+    }
+
+    private void Debug(string text)
+    {
+        Console.WriteLine($"[{Identity}] {text}");
     }
 }

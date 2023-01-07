@@ -20,7 +20,7 @@ public interface IState<TAccount, in TCharacter, TCharacterCollection>
 
     int AccessKey { get; }
 
-    byte Reason { set; }
+    byte Status { set; }
 
     int Slot { get; }
 }

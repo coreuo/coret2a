@@ -1,23 +1,24 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Shard.Incoming;
-using Packets.Shard.Outgoing;
-using Packets.Shard.Shared;
+using Packets.Shard.Features;
 
 namespace Packets.Shard;
 
 [Entity("Shard", "State")]
-public interface IState<in TData, out TAccount, out TMobile, out TMobileCollection> : Server.IState<TData>,
+public interface IState<in TData, out TAccount, out TMobile, out TMobileCollection, TMap> : Server.IState<TData>,
     IAccessKey,
     ICharacterSlot,
     ITipRequest,
-    ICredentials,
+    IUsername,
+    IPassword,
     ICombat,
     IDirection,
-    ISequence
+    ITarget,
+    IStatus
     where TData : IData
     where TAccount : IAccount<TMobile, TMobileCollection>
-    where TMobile : IMobile
+    where TMobile : IMobile<TMap>
     where TMobileCollection : ICollection<TMobile>
+    where TMap : IMap
 {
     TMobile Character { get; }
 

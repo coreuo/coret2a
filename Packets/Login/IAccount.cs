@@ -1,10 +1,12 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Login.Outgoing;
+using Packets.Login.Features;
 
 namespace Packets.Login;
 
-[Entity("Account")]
+[Entity("Login", "Account")]
 public interface IAccount :
+    IUsername,
+    IPassword,
     IAccessKey
 {
 }

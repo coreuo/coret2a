@@ -1,35 +1,36 @@
 ﻿using Core.Abstract.Attributes;
 using Core.Abstract.Extensions;
 
-namespace Server.Login
+namespace Server.Login;
+
+[Entity("Login", "Server")]
+public interface ILogin<TState, TAccount>
+    where TState : IState<TAccount>
+    where TAccount : IAccount
 {
-    [Entity("Login", "Server")]
-    public interface ILogin<in TState, TAccount>
-        where TState : IState<TAccount>
-        where TAccount : IAccount
+    TAccount Account { get; }
+
+    void Listen();
+
+    void Slice();
+
+    void PacketAccountLoginFailed(TState state);
+
+    void PacketBritanniaList(TState state);
+
+    void PacketUserServer(TState state);
+
+    [Priority(1.0)]
+    public void OnPacketAccountLoginRequest(TState state)
     {
-        void Listen();
+        if (Is.Default(state.Account)) PacketAccountLoginFailed(state);
 
-        void Slice();
+        else PacketBritanniaList(state);
+    }
 
-        void PacketAccountLoginFailed(TState state);
-
-        void PacketBritanniaList(TState state);
-
-        void PacketUserServer(TState state);
-
-        [Priority(1.0)]
-        public void OnPacketAccountLoginRequest(TState state)
-        {
-            if (Is.Default(state.Account)) PacketAccountLoginFailed(state);
-
-            else PacketBritanniaList(state);
-        }
-
-        [Priority(1.0)]
-        public void OnPacketBritanniaSelect(TState state)
-        {
-            PacketUserServer(state);
-        }
+    [Priority(1.0)]
+    public void OnPacketBritanniaSelect(TState state)
+    {
+        PacketUserServer(state);
     }
 }

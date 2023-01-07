@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
 using Core.Abstract.Domain;
+using Core.Abstract.Extensions;
 using Core.Launcher.Domain;
 using Core.Launcher.Extensions;
 
@@ -54,6 +55,8 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(TChild entity)
     {
+        if (Contains(entity)) return;
+
         if (*Top == 0)
         {
             *Top = entity.Id;
@@ -86,6 +89,8 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool Contains(TChild child)
     {
+        if (Is.Default(child)) return false;
+
         return _parentId == child.GetInt32(Owner);
     }
 

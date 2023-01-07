@@ -33,14 +33,13 @@ public interface IServer<TState, out TStateConcurrentQueue, out TStateCollection
 
         foreach (var state in States)
         {
-            if (state.Sending <= 0 && !state.Receiving)
-            {
-                Disconnected(state);
+            Process(state);
 
-                States.Remove(state);
-            }
+            if (state.Sending > 0 || state.Receiving) continue;
 
-            else Process(state);
+            Disconnected(state);
+
+            States.Remove(state);
         }
 
         if (!Locked && !Listening && !States.Any())

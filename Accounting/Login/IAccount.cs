@@ -3,11 +3,11 @@ using Core.Abstract.Extensions;
 
 namespace Accounting.Login;
 
-[Entity("Account")]
+[Entity("Login", "Account")]
 public interface IAccount
 {
     [Size(30)]
-    Span<char> Name { get; }
+    Span<char> Username { get; }
 
     [Size(30)]
     Span<char> Password { get; }

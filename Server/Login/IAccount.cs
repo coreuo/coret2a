@@ -1,9 +1,8 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Server.Login
+namespace Server.Login;
+
+[Entity("Login", "Account")]
+public interface IAccount
 {
-    [Entity("Account")]
-    public interface IAccount
-    {
-    }
 }

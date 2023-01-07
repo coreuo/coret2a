@@ -37,11 +37,33 @@ public interface IData
         return value;
     }
 
+    internal sbyte ReadSByte()
+    {
+        var value = (sbyte)Value[Start + Offset];
+#if DEBUG
+        Debug($"{Offset:D3} SBYTE   0x{value:X2} ({value})");
+#endif
+        Offset++;
+
+        return value;
+    }
+
     internal short ReadShort()
     {
         var value = (short)((Value[Start + Offset] << 8) | Value[Start + Offset + 1]);
 #if DEBUG
         Debug($"{Offset:D3} SHORT   0x{value:X4} ({value})");
+#endif
+        Offset += 2;
+
+        return value;
+    }
+
+    internal ushort ReadUShort()
+    {
+        var value = (ushort)((Value[Start + Offset] << 8) | Value[Start + Offset + 1]);
+#if DEBUG
+        Debug($"{Offset:D3} USHORT  0x{value:X4} ({value})");
 #endif
         Offset += 2;
 
@@ -124,6 +146,26 @@ public interface IData
         Debug($"{Offset:D3} BYTE    0x{value:X2} ({value})");
 #endif
         Value[Start + Offset] = value;
+
+        Offset++;
+    }
+
+    internal void WriteBool(bool value)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} BOOL    {(value ? "TRUE" : "FALSE")}");
+#endif
+        Value[Start + Offset] = value ? (byte)1 : (byte)0;
+
+        Offset++;
+    }
+
+    internal void WriteSByte(sbyte value)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} SBYTE   0x{value:X2} ({value})");
+#endif
+        Value[Start + Offset] = (byte)value;
 
         Offset++;
     }

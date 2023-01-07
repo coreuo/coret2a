@@ -1,9 +1,8 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Accounting.Shard
+namespace Accounting.Shard;
+
+[Entity("Mobile")]
+public interface ICharacter
 {
-    [Entity("Mobile")]
-    public interface ICharacter
-    {
-    }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Core.Generator.Domain;
@@ -24,7 +25,7 @@ namespace Core.Generator.Extensions
             }
         }
 
-        public static string ResolveEntityProperty(this IPropertySymbol property, string entity, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames)
+        public static Func<string> ResolveEntityProperty(this IPropertySymbol property, string entity, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames, Dictionary<string, int> flagDictionary)
         {
             var type = genericDictionary.ResolveType(property.Type);
 
@@ -34,19 +35,21 @@ namespace Core.Generator.Extensions
 
             propertyNames.Add(property.Name);
 
-            return $@"
+            var resolver = property.ResolveEntityPropertyAccessors(entity, type, metaData, genericDictionary, entitiesMetaData, propertiesMetaData, flagDictionary);
+
+            return () => $@"
     public {type} {property.Name}
-    {{{property.ResolveEntityPropertyAccessors(entity, type, metaData, genericDictionary, entitiesMetaData, propertiesMetaData)}
+    {{{resolver()}
     }}";
         }
 
-        public static string ResolveEntityPropertyAccessors(this IPropertySymbol property, string entity, string type, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData)
+        public static Func<string> ResolveEntityPropertyAccessors(this IPropertySymbol property, string entity, string type, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, Dictionary<string, int> flagDictionary)
         {
             var index = metaData.Count;
 
             if (property.Name == "Identity" && property.Type.ToString() == "string")
             {
-                return $@"
+                return () => $@"
         get => ""{entity}"";";
             }
             else if (property.Type.Name == "Span")
@@ -58,16 +61,35 @@ namespace Core.Generator.Extensions
             metaData.Add($@"
             new(nameof({property.Name}), {size}*sizeof({genericType}))");
 
-                return $@"
+                return () => $@"
         get => this.GetSpan<{entity}, {genericType}>({index}, {size});";
             }
+            else if (property.Type.Name == "Boolean" && property.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "FlagAttribute") is AttributeData flagAttribute && flagAttribute.ConstructorArguments[0].Value is string flag)
+            {
+                var flagIndex = 0;
 
+                if (flagAttribute.ConstructorArguments[1].Value is int @explicit && @explicit >= 0) flagIndex = @explicit;
+                else if (flagDictionary.ContainsKey(flag)) flagIndex = flagDictionary[flag]++;
+                else flagDictionary[flag] = 1;
+
+                return () =>
+                {
+                    var flagLine = $@"
+            new(nameof({flag}), sizeof(byte))";
+
+                    index = metaData.FindIndex(s => s == flagLine);
+
+                    return $@"
+        get => this.GetFlag({index}, {flagIndex});
+        set => this.SetFlag({index}, {flagIndex}, value);";
+                };
+            }
             else if (property.Type.Name == "DateTime")
             {
                 metaData.Add($@"
             new(nameof({property.Name}), sizeof(long))");
 
-                return $@"
+                return () => $@"
         get => new DateTime(this.GetInt64({index}));
         set => this.SetInt64({index}, value.Ticks);";
             }
@@ -77,7 +99,7 @@ namespace Core.Generator.Extensions
                 metaData.Add($@"
             new(nameof({property.Name}), sizeof({type}))");
                 
-                return $@"
+                return () => $@"
         get => this.Get{property.Type.Name}({index});
         set => this.Set{property.Type.Name}({index}, value);";
             }
@@ -99,7 +121,7 @@ namespace Core.Generator.Extensions
                 metaData.Add($@"
             new(""{property.Name}.Bottom"", sizeof(int))");
 
-                return $@"
+                return () => $@"
         get => this.GetConcurrentQueue({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
             }
 
@@ -129,21 +151,33 @@ namespace Core.Generator.Extensions
                 metaData.Add($@"
             new(""{property.Name}.Bottom"", sizeof(int))");
 
-                return $@"
+                return () => $@"
         get => this.GetList({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
             }
             else if (genericDictionary.TryGetValue(property.Type, out var name))
             {
+                var link = property.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "LinkAttribute") is AttributeData attribute ? (string)attribute.ConstructorArguments[0].Value : null;
+
                 entitiesMetaData.Add($"Launcher.Domain.{name}", name);
 
-                metaData.Add($@"
+                if(link == null) metaData.Add($@"
             new(nameof({name}), sizeof(int))");
 
-                return $@"
+                return () =>
+                {
+                    if (link != null)
+                    {
+                        var linkLine = $@"
+            new(""{link}"", sizeof(int))";
+
+                        index = metaData.FindIndex(s => s == linkLine);
+                    }
+
+                    return $@"
         get => this.GetValue(Pool.Save.{name}Store, {index});
         set => this.SetValue(Pool.Save.{name}Store, {index}, value);";
+                };
             }
-
             else
             {
                 entitiesMetaData.Add($"{property.Type}", property.Type.Name, true);
@@ -151,7 +185,7 @@ namespace Core.Generator.Extensions
                 metaData.Add($@"
             new(nameof({property.Name}), sizeof(int))");
 
-                return $@"
+                return () => $@"
         get => this.GetValue(Pool.Save.{property.Type.Name}Store, {index});
         set => this.SetValue(Pool.Save.{property.Type.Name}Store, {index}, value);";
             }

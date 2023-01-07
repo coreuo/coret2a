@@ -4,9 +4,10 @@ using Core.Abstract.Extensions;
 namespace Server.Shard;
 
 [Entity("Shard", "Server")]
-public interface IShard<in TState, TAccount>
-    where TState : IState<TAccount>
+public interface IShard<in TState, TAccount, TMobile>
+    where TState : IState<TAccount, TMobile>
     where TAccount : IAccount
+    where TMobile : IMobile
 {
     void Listen();
 
@@ -33,6 +34,8 @@ public interface IShard<in TState, TAccount>
     void PacketGameTime(TState state);
 
     void PacketOkMove(TState state);
+
+    void PacketOpenPaperDoll(TState state);
 
     [Priority(1.0)]
     public void OnPacketPostLogin(TState state)
@@ -72,5 +75,11 @@ public interface IShard<in TState, TAccount>
     public void OnPacketRequestMove(TState state)
     {
         PacketOkMove(state);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketRequestObjectUse(TState state)
+    {
+        if(state.IsSelfTargeted()) PacketOpenPaperDoll(state);
     }
 }

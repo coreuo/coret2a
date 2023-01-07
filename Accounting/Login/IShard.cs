@@ -3,9 +3,6 @@
 namespace Accounting.Login;
 
 [Entity("Shard", "Server")]
-public interface IShard<TAccount, out TAccountCollection>
-    where TAccount : IAccount
-    where TAccountCollection : ICollection<TAccount>
+public interface IShard
 {
-    TAccountCollection Accounts { get; }
 }

@@ -1,9 +1,8 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Server.Shard
+namespace Server.Shard;
+
+[Entity("Shard", "Account")]
+public interface IAccount
 {
-    [Entity("Account")]
-    public interface IAccount
-    {
-    }
 }

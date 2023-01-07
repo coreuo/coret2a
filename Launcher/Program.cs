@@ -29,21 +29,13 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     login.Port = 2593;
 
-    var account = save.AccountStore.Lease();
+    var loginAccount = save.LoginAccountStore.Lease();
 
-    "Admin".CopyTo(account.Name);
+    "Admin".CopyTo(loginAccount.Username);
 
-    "password".CopyTo(account.Password);
+    "password".CopyTo(loginAccount.Password);
 
-    login.Accounts.Add(account);
-
-    var character = save.MobileStore.Lease();
-
-    "Captain Jack".CopyTo(character.Name);
-
-    //"a".CopyTo(character.Password);
-
-    account.Characters.Add(character);
+    login.Accounts.Add(loginAccount);
 
     var shard = save.ShardServerStore.Lease();
 
@@ -54,6 +46,40 @@ static (LoginServer, ShardServer) Initialize(Save save)
     "Pirates".CopyTo(shard.Name);
 
     login.Shards.Add(shard);
+
+    var shardAccount = save.ShardAccountStore.Lease();
+
+    "Admin".CopyTo(shardAccount.Username);
+
+    shard.Accounts.Add(shardAccount);
+
+    var character = save.MobileStore.Lease();
+
+    "Captain Jack".CopyTo(character.Name);
+
+    character.Body = 0x190;
+
+    character.Hue = 0x83EA;
+
+    character.X = 0x660;
+
+    character.Y = 0x68A;
+
+    character.Z = 0xF;
+
+    character.Direction = 0x4;
+
+    var map = save.MapStore.Lease();
+
+    map.Width = 0x1800;
+
+    map.Height = 0x1000;
+
+    character.Map = map;
+
+    //"a".CopyTo(character.Password);
+
+    shardAccount.Characters.Add(character);
 
     return (login, shard);
 }

@@ -1,9 +1,8 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Compression
+namespace Compression;
+
+[Entity("Shard", "Server")]
+public interface IShard
 {
-    [Entity("Shard", "Server")]
-    public interface IShard
-    {
-    }
 }

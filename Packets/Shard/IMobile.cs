@@ -1,19 +1,33 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Shard.Outgoing;
-using Packets.Shard.Shared;
+using Packets.Shard.Features;
 
 namespace Packets.Shard;
 
 [Entity("Mobile")]
+public interface IMobile<TMap> : IMobile
+    where TMap : IMap
+{
+    TMap Map { get; }
+}
+
+[Entity("Mobile")]
 public interface IMobile :
-    ILoginConfirm,
-    IZMove,
-    ICredentials,
+    IPassword,
     ISunlight,
     ILight,
-    IEquippedMobile,
     IWeather,
     IDirection,
-    INotoriety
+    INotoriety,
+    IName,
+    IStatus,
+    IId,
+    IBody,
+    ILocation,
+    IHue,
+    IFemale,
+    IPoison,
+    IBlessed,
+    ICombat,
+    IHidden
 {
 }

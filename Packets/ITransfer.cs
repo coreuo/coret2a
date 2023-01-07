@@ -14,6 +14,15 @@ public interface ITransfer<TData>
         return id;
     }
 
+    internal byte BeginInternalIncomingPacket(TData data)
+    {
+        var id = data.BeginRead();
+#if DEBUG
+        DebugInternalIncoming(id);
+#endif
+        return id;
+    }
+
     internal void EndIncomingPacket(TData data)
     {
         data.ReadEnd();
@@ -50,11 +59,45 @@ public interface ITransfer<TData>
         return data;
     }
 
+    internal TData BeginInternalOutgoingNoSizePacket(byte id)
+    {
+#if DEBUG
+        DebugInternalOutgoing(id);
+#endif
+        var data = LeaseData();
+
+        data.BeginWriteNoSize(id);
+
+        return data;
+    }
+
     internal void EndOutgoingNoSizePacket(TData data)
     {
         data.EndWrite();
     }
 #if DEBUG
+    private static void DebugInternalIncoming(byte packetId)
+    {
+        Console.WriteLine($"Incoming: {GetInternalName(packetId)}");
+    }
+
+    private static void DebugInternalOutgoing(byte packetId)
+    {
+        Console.WriteLine($"Outgoing: {GetInternalName(packetId)}");
+    }
+
+    private static string GetInternalName(byte packetId)
+    {
+        switch (packetId)
+        {
+            // ReSharper disable StringLiteralTypo
+            case 0x00: return "0x00 INTERNAL_SHARD_AUTHORIZATION";
+            case 0x01: return "0x01 INTERNAL_SHARD_ACCOUNT_ONLINE";
+            case 0x02: return "0x02 INTERNAL_SHARD_ACCOUNT_OFFLINE";
+            default: return $"0x{packetId:X2} INVALID INTERNAL";
+        }
+    }
+
     private static void DebugIncoming(byte packetId)
     {
         Console.WriteLine($"Incoming: {GetPacketName(packetId)}");
@@ -256,7 +299,7 @@ public interface ITransfer<TData>
             case 0xB7: return "0xB7 PACKET_HELP_UNICODE_TEXT";
             case 0xB8: return "0xB8 PACKET_CHAR_PROFILE";
             case 0xB9: return "0xB9 PACKET_FEATURES";
-            default: return $"0x{packetId:X2} INVALID";
+            default: return $"0x{packetId:X2} INVALID PACKET";
             // ReSharper restore StringLiteralTypo
         }
     }
