@@ -25,7 +25,7 @@ namespace Core.Generator.Extensions
             }
         }
 
-        public static Func<string> ResolveEntityProperty(this IPropertySymbol property, bool isEntity, string entity, List<(string name, string size)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames, Dictionary<string, int> flagDictionary)
+        public static Func<string> ResolveEntityProperty(this IPropertySymbol property, bool isEntity, string entity, List<(string name, string size, string offset)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames, Dictionary<string, int> flagDictionary)
         {
             var type = genericDictionary.ResolveType(property.Type);
 
@@ -43,9 +43,11 @@ namespace Core.Generator.Extensions
     }}";
         }
 
-        public static Func<string> ResolveEntityPropertyAccessors(this IPropertySymbol property, bool isEntity, string entity, string type, List<(string name, string size)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, Dictionary<string, int> flagDictionary)
+        public static Func<string> ResolveEntityPropertyAccessors(this IPropertySymbol property, bool isEntity, string entity, string type, List<(string name, string size, string offset)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, Dictionary<string, int> flagDictionary)
         {
             var index = metaData.Count;
+
+            var offset = metaData.Aggregate("0", (c, n) => $"{c} + {n.size}");
 
             if (property.Name == "Identity" && property.Type.ToString() == "string")
             {
@@ -58,7 +60,7 @@ namespace Core.Generator.Extensions
 
                 var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
 
-            metaData.Add(($"nameof({property.Name})", $"{size}*sizeof({genericType})"));
+            metaData.Add(($"nameof({property.Name})", $"{size}*sizeof({genericType})", offset));
 
                 return () => $@"
         get => this.GetSpan<{entity}, {genericType}>({index}, {size});";
@@ -82,7 +84,7 @@ namespace Core.Generator.Extensions
             }
             else if (property.Type.Name == "DateTime")
             {
-                metaData.Add(($"nameof({property.Name})", "sizeof(long)"));
+                metaData.Add(($"nameof({property.Name})", "sizeof(long)", offset));
 
                 return () => $@"
         get => new DateTime(this.GetInt64({index}));
@@ -91,7 +93,7 @@ namespace Core.Generator.Extensions
 
             else if (property.Type.IsValueType)
             {
-                metaData.Add(($"nameof({property.Name})", $"sizeof({type})"));
+                metaData.Add(($"nameof({property.Name})", $"sizeof({type})", offset));
                 
                 return () => $@"
         get => this.Get{property.Type.Name}({index});
@@ -106,11 +108,13 @@ namespace Core.Generator.Extensions
 
                 var collectionEntityPropertyIndex = collectionEntityMetaData.Count;
 
-                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)"));
+                var collectionOffset = collectionEntityMetaData.Aggregate("0", (c, n) => $"{c} + {n.size}");
 
-                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)"));
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)", collectionOffset));
 
-                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)"));
+                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)", offset));
+
+                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)", offset));
 
                 return () => $@"
         get => this.GetConcurrentQueue({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
@@ -124,17 +128,19 @@ namespace Core.Generator.Extensions
 
                 var collectionEntityPropertyIndex = collectionEntityMetaData.Count;
 
-                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Owner\"", "sizeof(int)"));
+                var collectionOffset = collectionEntityMetaData.Aggregate("0", (c, n) => $"{c} + {n.size}");
 
-                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)"));
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Owner\"", "sizeof(int)", collectionOffset));
 
-                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Previous\"", "sizeof(int)"));
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)", $"{collectionOffset} + sizeof(int)"));
 
-                metaData.Add(($"\"{property.Name}.Count\"", "sizeof(int)"));
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Previous\"", "sizeof(int)", $"{collectionOffset} + sizeof(int) + sizeof(int)"));
 
-                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)"));
+                metaData.Add(($"\"{property.Name}.Count\"", "sizeof(int)", offset));
 
-                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)"));
+                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)", offset));
+
+                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)", offset));
 
                 return () => $@"
         get => this.GetList({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
@@ -145,7 +151,7 @@ namespace Core.Generator.Extensions
 
                 var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
 
-                metaData.Add(($"\"{property.Name}\"", $"{collectionElementType}.Size"));
+                metaData.Add(($"\"{property.Name}\"", $"{collectionElementType}.Size", offset));
 
                 return () => $@"
         get => this.GetArray<{entity}, {collectionElementType}>({index}, {size});";
@@ -156,7 +162,7 @@ namespace Core.Generator.Extensions
 
                 entitiesMetaData.Add($"Launcher.Domain.{name}", name);
 
-                if(link == null) metaData.Add(($"nameof({name})", "sizeof(int)"));
+                if(link == null) metaData.Add(($"nameof({name})", "sizeof(int)", offset));
 
                 return () =>
                 {
@@ -174,7 +180,7 @@ namespace Core.Generator.Extensions
             {
                 entitiesMetaData.Add($"{property.Type}", property.Type.Name, true);
 
-                metaData.Add(($"nameof({property.Name})", "sizeof(int)"));
+                metaData.Add(($"nameof({property.Name})", "sizeof(int)", offset));
 
                 return () => $@"
         get => this.GetValue(Pool.Save.{property.Type.Name}Store, {index});

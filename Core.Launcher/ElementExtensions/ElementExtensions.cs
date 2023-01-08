@@ -212,22 +212,8 @@ public static class ElementExtensions
     internal static unsafe void* GetPointer<TElement>(this TElement element, int index)
         where TElement : IElement
     {
-        var pool = element.GetPool();
+        var pool = element.Pool;
 
-        if (element.Properties.Length > 0 && element.Properties[0].Offset < 0)
-        {
-            var offset = 0;
-
-            foreach (var property in element.Properties)
-            {
-                property.Offset = offset;
-
-                offset += property.Size;
-            }
-        }
-
-        var size = element.Properties[^1].Offset;
-
-        return pool.GetPointer(element.EntityId, element.EntityIndex) + (element.ElementId - 1) * size + element.Properties[index].Offset;
+        return pool.GetPointer(element.EntityId, element.EntityIndex) + (element.Id - 1) * TElement.GetSize() + element.Properties[index].Offset;
     }
 }

@@ -5,11 +5,7 @@ namespace Packets.Shard;
 [Element("Skill")]
 public interface ISkill
 {
+    int Id { get; }
+
     ushort Value { get; }
-
-    ushort Base { get; }
-
-    ushort Cap { get; }
-
-    byte Status { get; }
 }

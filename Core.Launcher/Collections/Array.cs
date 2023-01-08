@@ -14,7 +14,7 @@ namespace Core.Launcher.Collections
 
         public int Index { get; }
 
-        public TElement this[int index] => TElement.Create(this, index + 1);
+        public TElement this[int index] => TElement.Create(Pool, Id, Index, index + 1);
 
         public Array(int count, Pool pool, int id, int index)
         {

@@ -79,6 +79,13 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     //"a".CopyTo(character.Password);
 
+    foreach (var item in character.Skills)
+    {
+        var skill = item;
+
+        skill.Value = (ushort)(item.Id * 0xA);
+    }
+
     shardAccount.Characters.Add(character);
 
     return (login, shard);

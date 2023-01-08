@@ -166,7 +166,7 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
     {{
         return new Property[]
         {{{string.Join(",", metaData.Select(p => $@"
-            new({p.name}, {p.size})"))}
+            new({p.name}, {p.size}, {p.offset})"))}
         }};
     }}
 
@@ -195,36 +195,38 @@ public struct {name} : IElement<{name}>,
     {string.Join(@",
     ", inheritance)}
 {{  
-    public Core.Launcher.Collections.Array<{name}> Array {{ get; set; }}
+    public Pool Pool {{ get; }}
 
-    public int EntityId => Array.Id;
+    public int EntityId {{ get; }}
 
-    public int EntityIndex => Array.Index;
+    public int EntityIndex {{ get; }}
 
-    public int ElementId {{ get; set; }}
+    public int Id {{ get; set; }}
 
     public Property[] Properties => _properties;
     {string.Join(Environment.NewLine, properties.Select(p => p()))}
 
-    public {name}(Core.Launcher.Collections.Array<{name}> array, int id)
+    public {name}(Pool pool, int entityId, int entityIndex, int elementId)
     {{
-        Array = array;
-        ElementId = id;
+        Pool = pool;
+        EntityId = entityId;
+        EntityIndex = entityIndex;
+        Id = elementId;
     }}
-
-    public Pool GetPool() => Array.Pool;
     {string.Join(Environment.NewLine, methods)}
 
     private static Property[] _properties = new Property[]
     {{{string.Join(",", metaData.Select(p => $@"
-        new({p.name}, {p.size})"))}
+        new({p.name}, {p.size}, {p.offset})"))}
     }};
 
     public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
 
-    public static {name} Create(Core.Launcher.Collections.Array<{name}> array, int id)
+    public static int GetSize() => Size;
+
+    public static {name} Create(Pool pool, int entityId, int entityIndex, int elementId)
     {{
-        return new {name}(array, id);
+        return new {name}(pool, entityId, entityIndex, elementId);
     }}
 }}");
         }

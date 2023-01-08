@@ -14,13 +14,9 @@ namespace Packets.Shard.Features
         {
             foreach (var skill in Skills)
             {
+                data.WriteUShort((ushort)skill.Id);
+
                 data.WriteUShort(skill.Value);
-
-                data.WriteUShort(skill.Base);
-
-                data.WriteUShort(skill.Cap);
-
-                data.WriteByte(skill.Status);
             }
         }
     }
