@@ -42,7 +42,7 @@ namespace Core.Generator.Extensions
 
             if (@interface.IsArray())
             {
-                if (parameter.Name.EndsWith("Array")) return $"IEntity<{name}>.Array<{resolved}>";
+                if (parameter.Name.EndsWith("Array")) return $"Core.Launcher.Collections.Array<{resolved}>";
             }
 
             throw new InvalidOperationException("Invalid entity or element parameter.");

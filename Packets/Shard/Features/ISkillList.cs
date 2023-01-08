@@ -8,5 +8,20 @@ namespace Packets.Shard.Features
     {
         [Size(49)]
         TSkillArray Skills { get; }
+
+        internal void WriteSkills<TData>(TData data)
+            where TData : IData
+        {
+            foreach (var skill in Skills)
+            {
+                data.WriteUShort(skill.Value);
+
+                data.WriteUShort(skill.Base);
+
+                data.WriteUShort(skill.Cap);
+
+                data.WriteByte(skill.Status);
+            }
+        }
     }
 }

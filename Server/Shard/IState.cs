@@ -16,7 +16,7 @@ public interface IState<out TAccount, TMobile>
 
     int Target { get; }
 
-    byte Command { get; }
+    byte Mode { get; }
 
     internal void TransferName()
     {

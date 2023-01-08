@@ -1,15 +1,15 @@
 ﻿using System.Runtime.CompilerServices;
+using Core.Launcher.Collections;
 
 namespace Core.Launcher.Domain
 {
-    public interface IElement<TEntity, TElement> : IElement
-        where TEntity : IEntity<TEntity>
-        where TElement : IElement<TEntity, TElement>
+    public interface IElement<TElement> : IElement
+        where TElement : IElement<TElement>
     {
-        TEntity Entity { get; }
+        public Array<TElement> Array { get; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static abstract TElement Create(TEntity entity, int index, int id);
+        public static abstract TElement Create(Array<TElement> array, int id);
     }
 
     public interface IElement

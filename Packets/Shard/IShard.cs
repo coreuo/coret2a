@@ -97,11 +97,11 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
                 return;
             }
-            case 034:
+            case 0x34:
             {
                 state.ReadPattern(data);
 
-                state.ReadCommand(data);
+                state.ReadMode(data);
 
                 state.ReadTarget(data);
 
@@ -241,6 +241,20 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
         state.Character.WriteNotoriety(data);
 
         EndOutgoingNoSizePacket(data);
+
+        state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketSkills(TState state)
+    {
+        var data = BeginOutgoingPacket(0x3A);
+
+        data.WriteByte(0x00);
+
+        state.Character.WriteSkills(data);
+
+        EndOutgoingPacket(data);
 
         state.Send(data);
     }

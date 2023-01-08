@@ -52,11 +52,11 @@ public static class EntityExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IEntity<TParent>.Array<TChild> GetArray<TParent, TChild>(this TParent parent, int index, int count)
-        where TParent : IEntity<TParent>
-        where TChild : IElement<TParent, TChild>
+    public static Array<TChild> GetArray<TParent, TChild>(this TParent parent, int index, int count)
+        where TParent : IEntity
+        where TChild : IElement<TChild>
     {
-        return new IEntity<TParent>.Array<TChild>(parent, index, count);
+        return new Array<TChild>(count, parent.GetPool(), parent.Id, index);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

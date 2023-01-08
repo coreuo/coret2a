@@ -37,6 +37,8 @@ public interface IShard<in TState, TAccount, TMobile>
 
     void PacketOpenPaperDoll(TState state);
 
+    void PacketSkills(TState state);
+
     [Priority(1.0)]
     public void OnPacketPostLogin(TState state)
     {
@@ -86,12 +88,14 @@ public interface IShard<in TState, TAccount, TMobile>
     [Priority(1.0)]
     public void OnPacketClientQuery(TState state)
     {
-        /*switch (state.Command)
+        switch (state.Mode)
         {
             case 0x05:
             {
+                PacketSkills(state);
 
+                return;
             }
-        }*/
+        }
     }
 }

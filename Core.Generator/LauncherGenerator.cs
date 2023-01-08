@@ -191,30 +191,28 @@ using Core.Abstract.Domain;
 
 namespace Launcher.Domain;
 
-public struct {name}<TEntity> : IElement<TEntity, {name}<TEntity>>,
+public struct {name} : IElement<{name}>,
     {string.Join(@",
     ", inheritance)}
-    where TEntity : IEntity<TEntity>
 {{  
-    public TEntity Entity {{ get; set; }}
+    public Core.Launcher.Collections.Array<{name}> Array {{ get; set; }}
 
-    public int EntityIndex {{ get; set; }}
+    public int EntityId => Array.Id;
 
-    public int EntityId => Entity.Id;
+    public int EntityIndex => Array.Index;
 
     public int ElementId {{ get; set; }}
 
     public Property[] Properties => _properties;
     {string.Join(Environment.NewLine, properties.Select(p => p()))}
 
-    public {name}(TEntity entity, int index, int id)
+    public {name}(Core.Launcher.Collections.Array<{name}> array, int id)
     {{
-        Entity = entity;
-        EntityIndex = index;
+        Array = array;
         ElementId = id;
     }}
 
-    public Pool GetPool() => Entity.GetPool();
+    public Pool GetPool() => Array.Pool;
     {string.Join(Environment.NewLine, methods)}
 
     private static Property[] _properties = new Property[]
@@ -224,9 +222,9 @@ public struct {name}<TEntity> : IElement<TEntity, {name}<TEntity>>,
 
     public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
 
-    public static {name}<TEntity> Create(TEntity entity, int index, int id)
+    public static {name} Create(Core.Launcher.Collections.Array<{name}> array, int id)
     {{
-        return new {name}<TEntity>(entity, index, id);
+        return new {name}(array, id);
     }}
 }}");
         }

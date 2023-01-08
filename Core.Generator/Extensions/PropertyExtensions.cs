@@ -139,11 +139,9 @@ namespace Core.Generator.Extensions
                 return () => $@"
         get => this.GetList({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
             }
-            else if (type.StartsWith($"IEntity<{entity}>.Array"))
+            else if (type.StartsWith($"Core.Launcher.Collections.Array"))
             {
-                var arrayType = type.Substring(type.IndexOf(">", StringComparison.InvariantCulture) + 1);
-
-                var collectionElementType = $"{arrayType.ResolveCollectionEntityType()}<{entity}>";
+                var collectionElementType = type.ResolveCollectionEntityType();
 
                 var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
 
