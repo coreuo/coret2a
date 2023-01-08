@@ -4,8 +4,11 @@ using Packets.Shard.Features;
 namespace Packets.Shard;
 
 [Entity("Mobile")]
-public interface IMobile<TMap> : IMobile
+public interface IMobile<TMap, TSkill, TSkillArray> : IMobile,
+    ISkillList<TSkill, TSkillArray>
     where TMap : IMap
+    where TSkill : ISkill
+    where TSkillArray : IReadOnlyList<TSkill>
 {
     TMap Map { get; }
 }

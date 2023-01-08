@@ -103,8 +103,9 @@ public interface IListener<TState, out TStateConcurrentQueue> : ISocket, IThread
 #endif
                 return HaltAccept(state, 2);
             }
-
+#if DEBUG
             Identity.CopyTo(state.Identity);
+#endif
 
             ListenQueue.TryAdd(state);
 

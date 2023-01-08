@@ -4,7 +4,7 @@ using Packets.Shard.Features;
 namespace Packets.Shard;
 
 [Entity("Shard", "Server")]
-public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap> :
+public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> :
     ITransfer<TData>,
     ICityList,
     IGameTime,
@@ -12,12 +12,14 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     IPassword,
     IAccessKey
     where TLogin : ILogin<TData>
-    where TState : IState<TData, TAccount, TMobile, TMobileCollection, TMap>
+    where TState : IState<TData, TAccount, TMobile, TMobileCollection, TMap, TSkill, TSkillArray>
     where TData : IData
     where TAccount : IAccount<TMobile, TMobileCollection>
-    where TMobile : IMobile<TMap>
+    where TMobile : IMobile<TMap, TSkill, TSkillArray>
     where TMobileCollection : ICollection<TMobile>
     where TMap : IMap
+    where TSkill : ISkill
+    where TSkillArray : IReadOnlyList<TSkill>
 {
 #if DEBUG
     string Identity { get; }
@@ -34,6 +36,8 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     void PacketRequestMove(TState state);
 
     void PacketRequestObjectUse(TState state);
+
+    void PacketClientQuery(TState state);
 
     void InternalShardAuthorization();
 
@@ -93,9 +97,23 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
                 return;
             }
+            case 034:
+            {
+                state.ReadPattern(data);
+
+                state.ReadCommand(data);
+
+                state.ReadTarget(data);
+
+                EndIncomingPacket(data);
+
+                PacketClientQuery(state);
+
+                return;
+            }
             case 0x5D:
             {
-                state.ReadCharacterPattern(data);
+                state.ReadPattern(data);
                 
                 state.ReadName(data);
 
@@ -393,12 +411,14 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     private void SendToLogin(TData data)
     {
         Login.SendInternal(data);
-
+#if DEBUG
         Debug($"internal sent {data.Length} bytes");
+#endif
     }
-
+#if DEBUG
     private void Debug(string text)
     {
         Console.WriteLine($"[{Identity}] {text}");
     }
+#endif
 }

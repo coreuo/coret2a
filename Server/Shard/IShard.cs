@@ -58,7 +58,7 @@ public interface IShard<in TState, TAccount, TMobile>
 
         PacketLight(state);
 
-        //PacketLoginConfirm(state);
+        PacketLoginConfirm(state);
 
         PacketCombat(state);
 
@@ -81,5 +81,17 @@ public interface IShard<in TState, TAccount, TMobile>
     public void OnPacketRequestObjectUse(TState state)
     {
         if(state.IsSelfTargeted()) PacketOpenPaperDoll(state);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketClientQuery(TState state)
+    {
+        /*switch (state.Command)
+        {
+            case 0x05:
+            {
+
+            }
+        }*/
     }
 }

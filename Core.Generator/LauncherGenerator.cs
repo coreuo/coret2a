@@ -68,22 +68,22 @@ public class Save : Save<Save>, ISave<Save>
             var assemblies = compilation.GetReferencedAssemblies();
 
             var interfaces = assemblies
-                .SelectMany(EntityExtensions.GetEntityInterfaces)
+                .SelectMany(EntityExtensions.GetEntityAndElementInterfaces)
                 .ToList();
 
             var implementations = interfaces
-                .GroupBy(g => g.GetEntitySubject(), (k, l) => (k, l.ToImmutableList()))
+                .GroupBy(g => g.GetSubject(), (k, l) => (k, l.ToImmutableList()))
                 .Select(g => new
                 {
                     Subject = g.k,
                     Categories = g.Item2
-                        .Where(i => i.HasEntityVariant())
-                        .GroupBy(i => i.GetEntityVariant(), (m, n) => new
+                        .Where(i => i.HasVariant())
+                        .GroupBy(i => i.GetVariant(), (m, n) => new
                         {
                             Variant = m,
                             Interfaces = n
                         }),
-                    General = g.Item2.Where(i => !i.HasEntityVariant())
+                    General = g.Item2.Where(i => !i.HasVariant())
                 })
                 .ToList();
 
@@ -99,35 +99,39 @@ public class Save : Save<Save>, ISave<Save>
                 var subject = implementation.Subject;
 
                 if (generalSubjects.Contains(subject))
-                    yield return CreateImplementation(subject, implementation.General.ResolveInterfaceDictionary(generalSubjects), entitiesMetaData, propertiesMetaData);
+                    yield return CreateImplementation(subject, implementation.General.ResolveInterfaceDictionary(subject, generalSubjects), entitiesMetaData, propertiesMetaData);
                 else
                     foreach (var category in implementation.Categories)
-                        yield return CreateImplementation($"{category.Variant}{subject}", category.Interfaces.Concat(implementation.General).ResolveInterfaceDictionary(generalSubjects, category.Variant), entitiesMetaData, propertiesMetaData);
+                        yield return CreateImplementation($"{category.Variant}{subject}", category.Interfaces.Concat(implementation.General).ResolveInterfaceDictionary($"{category.Variant}{subject}", generalSubjects, category.Variant), entitiesMetaData, propertiesMetaData);
             }
         }
 
         private static Func<(string name, string content)> CreateImplementation(string name, ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> interfaceDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData)
         {
-            entitiesMetaData.Add($"Launcher.Domain.{name}", name, false, interfaceDictionary.Keys.Any(i => i.GetAttributes().Any(a => a.IsSynchronizedAttribute())));
+            var isEntity = interfaceDictionary.Keys.Any(i => i.GetAttributes().Any(a => a.IsEntityAttribute()));
+
+            if (isEntity)
+                entitiesMetaData.Add($"Launcher.Domain.{name}", name, false, interfaceDictionary.Keys.Any(i => i.GetAttributes().Any(a => a.IsSynchronizedAttribute())));
 
             var inheritance = interfaceDictionary.Select(i => ((INamedTypeSymbol)i.Key).ResolveTypeParameters(p => i.Value[p])).ToList();
 
-            var metaData = propertiesMetaData.Get(name);
+            var metaData = propertiesMetaData.Get(name, isEntity);
 
             var propertyNames = new HashSet<string>();
 
             var flagDictionary = new Dictionary<string, int>();
 
-            var properties = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedProperties().Select(p => p.ResolveEntityProperty(name, metaData, i.Value, entitiesMetaData, propertiesMetaData, propertyNames, flagDictionary)).Where(l => l != null)).ToList();
+            var properties = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedProperties().Select(p => p.ResolveEntityProperty(isEntity, name, metaData, i.Value, entitiesMetaData, propertiesMetaData, propertyNames, flagDictionary)).Where(l => l != null)).ToList();
 
             var calls = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedMethods(false).Select(m => (((INamedTypeSymbol)i.Key).ResolveHandlers(name, i.Value), new ResolvedMethod(m, i.Value, true), m))).GroupBy(i => i.Item2, g => g).ToImmutableDictionary(g => g.Key, g => g.Select(i => (i.Item1, i.m)).ToImmutableList());
 
             var methods = interfaceDictionary.SelectMany(i => ((INamedTypeSymbol)i.Key).GetNestedMethods(true).Where(m => m.MethodKind == MethodKind.Ordinary).Select(m => m.ResolveEntityMethodDefinition(i.Value, calls))).ToImmutableHashSet();
 
-            return () => ($"{name}.cs", $@"
+            if(isEntity)
+                return () => ($"{name}.cs", $@"
 using Core.Launcher;
 using Core.Launcher.Domain;
-using Core.Launcher.Extensions;
+using Core.Launcher.EntityExtensions;
 using Core.Abstract.Domain;
 
 namespace Launcher.Domain;
@@ -161,9 +165,12 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
     public static Property[] GetProperties()
     {{
         return new Property[]
-        {{{string.Join(",", metaData)}
+        {{{string.Join(",", metaData.Select(p => $@"
+            new({p.name}, {p.size})"))}
         }};
     }}
+
+    public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
 
     public static int GetPoolCapacity()
     {{
@@ -173,6 +180,53 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
     public static {name} Create(Pool<Save, {name}> pool, int id)
     {{
         return new {name}(pool, id);
+    }}
+}}");
+            else
+                return () => ($"{name}.cs", $@"
+using Core.Launcher;
+using Core.Launcher.Domain;
+using Core.Launcher.ElementExtensions;
+using Core.Abstract.Domain;
+
+namespace Launcher.Domain;
+
+public struct {name}<TEntity> : IElement<TEntity, {name}<TEntity>>,
+    {string.Join(@",
+    ", inheritance)}
+    where TEntity : IEntity<TEntity>
+{{  
+    public TEntity Entity {{ get; set; }}
+
+    public int EntityIndex {{ get; set; }}
+
+    public int EntityId => Entity.Id;
+
+    public int ElementId {{ get; set; }}
+
+    public Property[] Properties => _properties;
+    {string.Join(Environment.NewLine, properties.Select(p => p()))}
+
+    public {name}(TEntity entity, int index, int id)
+    {{
+        Entity = entity;
+        EntityIndex = index;
+        ElementId = id;
+    }}
+
+    public Pool GetPool() => Entity.GetPool();
+    {string.Join(Environment.NewLine, methods)}
+
+    private static Property[] _properties = new Property[]
+    {{{string.Join(",", metaData.Select(p => $@"
+        new({p.name}, {p.size})"))}
+    }};
+
+    public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
+
+    public static {name}<TEntity> Create(TEntity entity, int index, int id)
+    {{
+        return new {name}<TEntity>(entity, index, id);
     }}
 }}");
         }

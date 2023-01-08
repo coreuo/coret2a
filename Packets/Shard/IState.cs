@@ -4,7 +4,7 @@ using Packets.Shard.Features;
 namespace Packets.Shard;
 
 [Entity("Shard", "State")]
-public interface IState<in TData, out TAccount, out TMobile, out TMobileCollection, TMap> : Server.IState<TData>,
+public interface IState<in TData, out TAccount, out TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> : Server.IState<TData>,
     IAccessKey,
     ICharacterSlot,
     ITipRequest,
@@ -13,12 +13,16 @@ public interface IState<in TData, out TAccount, out TMobile, out TMobileCollecti
     ICombat,
     IDirection,
     ITarget,
-    IStatus
+    IStatus,
+    IPattern,
+    ICommand
     where TData : IData
     where TAccount : IAccount<TMobile, TMobileCollection>
-    where TMobile : IMobile<TMap>
+    where TMobile : IMobile<TMap, TSkill, TSkillArray>
     where TMobileCollection : ICollection<TMobile>
     where TMap : IMap
+    where TSkill : ISkill
+    where TSkillArray : IReadOnlyList<TSkill>
 {
     TMobile Character { get; }
 

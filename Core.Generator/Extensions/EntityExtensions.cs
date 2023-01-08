@@ -8,31 +8,31 @@ namespace Core.Generator.Extensions
 {
     public static class EntityExtensions
     {
-        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveInterfaceDictionary(this IEnumerable<INamedTypeSymbol> interfaces, ImmutableHashSet<string> generalSubjects, string variant = null)
+        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveInterfaceDictionary(this IEnumerable<INamedTypeSymbol> interfaces, string name, ImmutableHashSet<string> generalSubjects, string variant = null)
         {
-            return interfaces.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityParameter(variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
+            return interfaces.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityOrElementParameter(name, variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
         }
 
-        public static string ResolveEntityParameter(this ITypeParameterSymbol parameter, string parentVariant, ImmutableHashSet<string> generalSubjects)
+        public static string ResolveEntityOrElementParameter(this ITypeParameterSymbol parameter, string name, string parentVariant, ImmutableHashSet<string> generalSubjects)
         {
             var @interface = parameter.ConstraintTypes
                 .OfType<INamedTypeSymbol>()
                 .Single();
 
-            if (@interface.HasEntityAttribute()) return @interface.ResolveEntityParameter(parentVariant, generalSubjects);
+            if (@interface.HasEntityAttribute() || @interface.HasElementAttribute()) return @interface.ResolveEntityOrElementParameter(parentVariant, generalSubjects);
             /*if (@interface.IsPool()) return $"Core.Launcher.Domain.Pool<Core.Launcher.Domain.Save, {@interface.TypeArguments.Single()}>";
             if (@interface.IsCache()) return $"Core.Launcher.Domain.Cache<{@interface.TypeArguments.Single()}>";*/
 
             var nested = (ITypeParameterSymbol)@interface.TypeArguments.Single();
 
-            var resolved = nested.ResolveEntityParameter(parentVariant, generalSubjects);
+            var resolved = nested.ResolveEntityOrElementParameter(name, parentVariant, generalSubjects);
 
             if (@interface.IsProducerConsumerCollection())
             {
                 if (parameter.Name.EndsWith("ConcurrentQueue")) return $"Core.Launcher.Collections.ConcurrentQueue<{resolved}>";
-                else if(parameter.Name.EndsWith("ConcurrentStack")) return $"Core.Launcher.Collections.ConcurrentStack<{resolved}>";
-                else if(parameter.Name.EndsWith("Queue")) return $"Core.Launcher.Collections.Queue<{resolved}>";
-                else if(parameter.Name.EndsWith("Stack")) return $"Core.Launcher.Collections.Stack<{resolved}>";
+                else if (parameter.Name.EndsWith("ConcurrentStack")) return $"Core.Launcher.Collections.ConcurrentStack<{resolved}>";
+                else if (parameter.Name.EndsWith("Queue")) return $"Core.Launcher.Collections.Queue<{resolved}>";
+                else if (parameter.Name.EndsWith("Stack")) return $"Core.Launcher.Collections.Stack<{resolved}>";
             }
 
             if (@interface.IsCollection())
@@ -40,31 +40,36 @@ namespace Core.Generator.Extensions
                 if (parameter.Name.EndsWith("Collection")) return $"Core.Launcher.Collections.List<{resolved}>";
             }
 
-            throw new InvalidOperationException("Invalid entity parameter.");
+            if (@interface.IsArray())
+            {
+                if (parameter.Name.EndsWith("Array")) return $"IEntity<{name}>.Array<{resolved}>";
+            }
+
+            throw new InvalidOperationException("Invalid entity or element parameter.");
         }
 
-        public static string ResolveEntityParameter(this INamedTypeSymbol @interface, string parentVariant, ImmutableHashSet<string> generalSubjects)
+        public static string ResolveEntityOrElementParameter(this INamedTypeSymbol @interface, string parentVariant, ImmutableHashSet<string> generalSubjects)
         {
-            var subject = @interface.GetEntitySubject();
+            var subject = @interface.GetSubject();
 
-            var childVariant = @interface.GetEntityVariant();
+            var childVariant = @interface.GetVariant();
 
             var result = generalSubjects.Contains(subject) ? subject : string.IsNullOrEmpty(childVariant) ? $"{parentVariant}{subject}" : $"{childVariant}{subject}";
 
             return result;
         }
 
-        public static IEnumerable<INamedTypeSymbol> GetEntityInterfaces(this IAssemblySymbol assembly)
+        public static IEnumerable<INamedTypeSymbol> GetEntityAndElementInterfaces(this IAssemblySymbol assembly)
         {
-            return assembly.GlobalNamespace.FindRecursive(HasEntityAttribute).ToList();
+            return assembly.GlobalNamespace.FindRecursive(HasEntityAttribute).Concat(assembly.GlobalNamespace.FindRecursive(HasElementAttribute)).ToList();
         }
 
-        public static string GetEntitySubject(this INamedTypeSymbol symbol)
+        public static string GetSubject(this INamedTypeSymbol symbol)
         {
-            return symbol.GetEntityAttribute().GetEntitySubject();
+            return symbol.HasElementAttribute() ? symbol.GetElementAttribute().GetSubject() : symbol.GetEntityAttribute().GetSubject();
         }
 
-        public static string GetEntitySubject(this AttributeData attribute)
+        public static string GetSubject(this AttributeData attribute)
         {
             if (attribute.ConstructorArguments.Length < 2)
                 return (string)attribute.ConstructorArguments[0].Value;
@@ -72,12 +77,12 @@ namespace Core.Generator.Extensions
             return (string)attribute.ConstructorArguments[1].Value;
         }
 
-        public static string GetEntityVariant(this INamedTypeSymbol symbol)
+        public static string GetVariant(this INamedTypeSymbol symbol)
         {
-            return symbol.GetEntityAttribute().GetEntityVariant();
+            return symbol.HasElementAttribute() ? symbol.GetElementAttribute().GetVariant() : symbol.GetEntityAttribute().GetVariant();
         }
 
-        public static string GetEntityVariant(this AttributeData attribute)
+        public static string GetVariant(this AttributeData attribute)
         {
             if (attribute.ConstructorArguments.Length < 2)
                 return string.Empty;
@@ -85,9 +90,9 @@ namespace Core.Generator.Extensions
             return (string)attribute.ConstructorArguments[0].Value;
         }
 
-        public static bool HasEntityVariant(this INamedTypeSymbol symbol)
+        public static bool HasVariant(this INamedTypeSymbol symbol)
         {
-            return !string.IsNullOrEmpty(symbol.GetEntityVariant());
+            return !string.IsNullOrEmpty(symbol.GetVariant());
         }
 
         public static bool HasEntityAttribute(this INamedTypeSymbol symbol)
@@ -95,14 +100,29 @@ namespace Core.Generator.Extensions
             return symbol.GetAttributes().Any(IsEntityAttribute);
         }
 
+        public static bool HasElementAttribute(this INamedTypeSymbol symbol)
+        {
+            return symbol.GetAttributes().Any(IsElementAttribute);
+        }
+
         public static AttributeData GetEntityAttribute(this INamedTypeSymbol symbol)
         {
             return symbol.GetAttributes().Single(IsEntityAttribute);
         }
 
+        public static AttributeData GetElementAttribute(this INamedTypeSymbol symbol)
+        {
+            return symbol.GetAttributes().Single(IsElementAttribute);
+        }
+
         public static bool IsEntityAttribute(this AttributeData attribute)
         {
             return attribute.AttributeClass?.Name == "EntityAttribute";
+        }
+
+        public static bool IsElementAttribute(this AttributeData attribute)
+        {
+            return attribute.AttributeClass?.Name == "ElementAttribute";
         }
 
         public static bool IsSynchronizedAttribute(this AttributeData attribute)
@@ -128,6 +148,11 @@ namespace Core.Generator.Extensions
         public static bool IsCollection(this INamedTypeSymbol symbol)
         {
             return symbol.Name == "ICollection";
+        }
+
+        public static bool IsArray(this INamedTypeSymbol symbol)
+        {
+            return symbol.Name == "IReadOnlyList";
         }
     }
 }

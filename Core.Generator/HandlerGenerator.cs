@@ -16,7 +16,7 @@ namespace Core.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var interfaces = context.Compilation.Assembly.GetEntityInterfaces();
+            var interfaces = context.Compilation.Assembly.GetEntityAndElementInterfaces();
 
             foreach (var (name, content) in interfaces.GroupBy(i => ($"{i.ContainingNamespace}", i.Name.Substring(1, i.Name.Length - 1))).Select(g => CreateHandlersFile(context.Compilation.Assembly, g.Key, g)))
             {

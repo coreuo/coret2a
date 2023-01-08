@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using Core.Abstract.Domain;
 using Core.Launcher.Domain;
-using Core.Launcher.Extensions;
+using Core.Launcher.EntityExtensions;
 
 namespace Core.Launcher.Collections;
 

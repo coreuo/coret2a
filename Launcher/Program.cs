@@ -83,4 +83,3 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     return (login, shard);
 }
-

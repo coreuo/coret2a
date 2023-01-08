@@ -14,13 +14,13 @@ public interface IArea :
     internal void WriteByteAreaId<TData>(TData data)
         where TData : IData
     {
-        data.WriteByte((byte)0x71);
+        data.WriteByte((byte)Id);
     }
 
     internal void WriteUShortAreaId<TData>(TData data)
         where TData : IData
     {
-        data.WriteUShort((ushort)0x71);
+        data.WriteUShort((ushort)Id);
     }
 
     internal void WriteArea<TData>(TData data)

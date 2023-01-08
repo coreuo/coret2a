@@ -1,7 +1,7 @@
 ﻿using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 using Core.Abstract.Domain;
-using Core.Launcher.Extensions;
+using Core.Launcher.EntityExtensions;
 
 namespace Core.Launcher.Domain;
 

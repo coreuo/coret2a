@@ -3,7 +3,7 @@ using Core.Abstract.Domain;
 using Core.Launcher.Collections;
 using Core.Launcher.Domain;
 
-namespace Core.Launcher.Extensions;
+namespace Core.Launcher.EntityExtensions;
 
 public static class EntityExtensions
 {
@@ -49,6 +49,14 @@ public static class EntityExtensions
         where TChild : IEntity
     {
         return new Collections.List<TChild>(parent.Id, parent.GetInt32Pointer(parentIndex), children, childrenIndex);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static IEntity<TParent>.Array<TChild> GetArray<TParent, TChild>(this TParent parent, int index, int count)
+        where TParent : IEntity<TParent>
+        where TChild : IElement<TParent, TChild>
+    {
+        return new IEntity<TParent>.Array<TChild>(parent, index, count);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

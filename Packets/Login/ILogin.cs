@@ -164,12 +164,14 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
     private void SendToShard(TState state, TData data)
     {
         state.Shard.SendInternal(data);
-
+#if DEBUG
         Debug($"internal sent {data.Length} bytes");
+#endif
     }
-
+#if DEBUG
     private void Debug(string text)
     {
         Console.WriteLine($"[{Identity}] {text}");
     }
+#endif
 }

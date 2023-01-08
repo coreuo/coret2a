@@ -25,7 +25,7 @@ namespace Core.Generator.Extensions
             }
         }
 
-        public static Func<string> ResolveEntityProperty(this IPropertySymbol property, string entity, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames, Dictionary<string, int> flagDictionary)
+        public static Func<string> ResolveEntityProperty(this IPropertySymbol property, bool isEntity, string entity, List<(string name, string size)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, HashSet<string> propertyNames, Dictionary<string, int> flagDictionary)
         {
             var type = genericDictionary.ResolveType(property.Type);
 
@@ -35,7 +35,7 @@ namespace Core.Generator.Extensions
 
             propertyNames.Add(property.Name);
 
-            var resolver = property.ResolveEntityPropertyAccessors(entity, type, metaData, genericDictionary, entitiesMetaData, propertiesMetaData, flagDictionary);
+            var resolver = property.ResolveEntityPropertyAccessors(isEntity, entity, type, metaData, genericDictionary, entitiesMetaData, propertiesMetaData, flagDictionary);
 
             return () => $@"
     public {type} {property.Name}
@@ -43,7 +43,7 @@ namespace Core.Generator.Extensions
     }}";
         }
 
-        public static Func<string> ResolveEntityPropertyAccessors(this IPropertySymbol property, string entity, string type, List<string> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, Dictionary<string, int> flagDictionary)
+        public static Func<string> ResolveEntityPropertyAccessors(this IPropertySymbol property, bool isEntity, string entity, string type, List<(string name, string size)> metaData, ImmutableDictionary<ISymbol, string> genericDictionary, EntitiesMetaData entitiesMetaData, PropertiesMetaData propertiesMetaData, Dictionary<string, int> flagDictionary)
         {
             var index = metaData.Count;
 
@@ -58,8 +58,7 @@ namespace Core.Generator.Extensions
 
                 var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
 
-            metaData.Add($@"
-            new(nameof({property.Name}), {size}*sizeof({genericType}))");
+            metaData.Add(($"nameof({property.Name})", $"{size}*sizeof({genericType})"));
 
                 return () => $@"
         get => this.GetSpan<{entity}, {genericType}>({index}, {size});";
@@ -74,10 +73,7 @@ namespace Core.Generator.Extensions
 
                 return () =>
                 {
-                    var flagLine = $@"
-            new(nameof({flag}), sizeof(byte))";
-
-                    index = metaData.FindIndex(s => s == flagLine);
+                    index = metaData.FindIndex(s => s.name == $"nameof({flag})");
 
                     return $@"
         get => this.GetFlag({index}, {flagIndex});
@@ -86,8 +82,7 @@ namespace Core.Generator.Extensions
             }
             else if (property.Type.Name == "DateTime")
             {
-                metaData.Add($@"
-            new(nameof({property.Name}), sizeof(long))");
+                metaData.Add(($"nameof({property.Name})", "sizeof(long)"));
 
                 return () => $@"
         get => new DateTime(this.GetInt64({index}));
@@ -96,8 +91,7 @@ namespace Core.Generator.Extensions
 
             else if (property.Type.IsValueType)
             {
-                metaData.Add($@"
-            new(nameof({property.Name}), sizeof({type}))");
+                metaData.Add(($"nameof({property.Name})", $"sizeof({type})"));
                 
                 return () => $@"
         get => this.Get{property.Type.Name}({index});
@@ -112,14 +106,11 @@ namespace Core.Generator.Extensions
 
                 var collectionEntityPropertyIndex = collectionEntityMetaData.Count;
 
-                collectionEntityMetaData.Add($@"
-            new(""{entity}.{property.Name}.Next"", sizeof(int))");
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)"));
 
-                metaData.Add($@"
-            new(""{property.Name}.Top"", sizeof(int))");
+                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)"));
 
-                metaData.Add($@"
-            new(""{property.Name}.Bottom"", sizeof(int))");
+                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)"));
 
                 return () => $@"
         get => this.GetConcurrentQueue({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
@@ -133,26 +124,33 @@ namespace Core.Generator.Extensions
 
                 var collectionEntityPropertyIndex = collectionEntityMetaData.Count;
 
-                collectionEntityMetaData.Add($@"
-            new(""{entity}.{property.Name}.Owner"", sizeof(int))");
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Owner\"", "sizeof(int)"));
 
-                collectionEntityMetaData.Add($@"
-            new(""{entity}.{property.Name}.Next"", sizeof(int))");
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Next\"", "sizeof(int)"));
 
-                collectionEntityMetaData.Add($@"
-            new(""{entity}.{property.Name}.Previous"", sizeof(int))");
+                collectionEntityMetaData.Add(($"\"{entity}.{property.Name}.Previous\"", "sizeof(int)"));
 
-                metaData.Add($@"
-            new(""{property.Name}.Count"", sizeof(int))");
+                metaData.Add(($"\"{property.Name}.Count\"", "sizeof(int)"));
 
-                metaData.Add($@"
-            new(""{property.Name}.Top"", sizeof(int))");
+                metaData.Add(($"\"{property.Name}.Top\"", "sizeof(int)"));
 
-                metaData.Add($@"
-            new(""{property.Name}.Bottom"", sizeof(int))");
+                metaData.Add(($"\"{property.Name}.Bottom\"", "sizeof(int)"));
 
                 return () => $@"
         get => this.GetList({index}, Pool.Save.{collectionEntityType}Store, {collectionEntityPropertyIndex});";
+            }
+            else if (type.StartsWith($"IEntity<{entity}>.Array"))
+            {
+                var arrayType = type.Substring(type.IndexOf(">", StringComparison.InvariantCulture) + 1);
+
+                var collectionElementType = $"{arrayType.ResolveCollectionEntityType()}<{entity}>";
+
+                var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
+
+                metaData.Add(($"\"{property.Name}\"", $"{collectionElementType}.Size"));
+
+                return () => $@"
+        get => this.GetArray<{entity}, {collectionElementType}>({index}, {size});";
             }
             else if (genericDictionary.TryGetValue(property.Type, out var name))
             {
@@ -160,17 +158,13 @@ namespace Core.Generator.Extensions
 
                 entitiesMetaData.Add($"Launcher.Domain.{name}", name);
 
-                if(link == null) metaData.Add($@"
-            new(nameof({name}), sizeof(int))");
+                if(link == null) metaData.Add(($"nameof({name})", "sizeof(int)"));
 
                 return () =>
                 {
                     if (link != null)
                     {
-                        var linkLine = $@"
-            new(""{link}"", sizeof(int))";
-
-                        index = metaData.FindIndex(s => s == linkLine);
+                        index = metaData.FindIndex(s => s.name == $"\"{link}\"");
                     }
 
                     return $@"
@@ -182,8 +176,7 @@ namespace Core.Generator.Extensions
             {
                 entitiesMetaData.Add($"{property.Type}", property.Type.Name, true);
 
-                metaData.Add($@"
-            new(nameof({property.Name}), sizeof(int))");
+                metaData.Add(($"nameof({property.Name})", "sizeof(int)"));
 
                 return () => $@"
         get => this.GetValue(Pool.Save.{property.Type.Name}Store, {index});

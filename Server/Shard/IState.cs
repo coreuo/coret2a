@@ -14,7 +14,9 @@ public interface IState<out TAccount, TMobile>
     [Size(60)]
     Span<char> Name { get; }
 
-    int Serial { get; }
+    int Target { get; }
+
+    byte Command { get; }
 
     internal void TransferName()
     {
@@ -23,6 +25,6 @@ public interface IState<out TAccount, TMobile>
 
     internal bool IsSelfTargeted()
     {
-        return Serial == Character.Id;
+        return Target == Character.Id;
     }
 }
