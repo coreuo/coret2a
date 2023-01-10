@@ -151,7 +151,7 @@ namespace Core.Generator.Extensions
 
                 var size = property.GetAttributes().Single(a => a.AttributeClass?.Name == "SizeAttribute").ConstructorArguments[0].Value;
 
-                metaData.Add(($"\"{property.Name}\"", $"{collectionElementType}.Size", offset));
+                metaData.Add(($"\"{property.Name}\"", $"{size} * {collectionElementType}.Size", offset));
 
                 return () => $@"
         get => this.GetArray<{entity}, {collectionElementType}>({index}, {size});";

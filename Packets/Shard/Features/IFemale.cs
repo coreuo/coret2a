@@ -4,6 +4,6 @@ namespace Packets.Shard.Features;
 
 public interface IFemale
 {
-    [Flag("Status", 0)]
+    [Flag("Status", 1)]
     bool Female { get; }
 }

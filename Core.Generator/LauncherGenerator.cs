@@ -131,7 +131,7 @@ public class Save : Save<Save>, ISave<Save>
                 return () => ($"{name}.cs", $@"
 using Core.Launcher;
 using Core.Launcher.Domain;
-using Core.Launcher.EntityExtensions;
+using Core.Launcher.Extensions;
 using Core.Abstract.Domain;
 
 namespace Launcher.Domain;
@@ -161,6 +161,10 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
 
     public IStore<{name}> GetStore() => Pool;
     {string.Join(Environment.NewLine, methods)}
+    public int GetOffset(int index)
+    {{
+        return Schema.Offset + (Id - 1) * Pool.Schema.Size + Pool.Properties[index].Offset;
+    }}
 
     public static Property[] GetProperties()
     {{
@@ -171,6 +175,8 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
     }}
 
     public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
+
+    public static int GetSize() => Size;
 
     public static int GetPoolCapacity()
     {{
@@ -186,7 +192,7 @@ public struct {name} : IEntity<Pool<Save, {name}>, {name}>,
                 return () => ($"{name}.cs", $@"
 using Core.Launcher;
 using Core.Launcher.Domain;
-using Core.Launcher.ElementExtensions;
+using Core.Launcher.Extensions;
 using Core.Abstract.Domain;
 
 namespace Launcher.Domain;
@@ -197,24 +203,28 @@ public struct {name} : IElement<{name}>,
 {{  
     public Pool Pool {{ get; }}
 
+    public int Id {{ get; set; }}
+
     public int EntityId {{ get; }}
 
     public int EntityIndex {{ get; }}
-
-    public int Id {{ get; set; }}
-
-    public Property[] Properties => _properties;
     {string.Join(Environment.NewLine, properties.Select(p => p()))}
 
-    public {name}(Pool pool, int entityId, int entityIndex, int elementId)
+    public {name}(Pool pool, int elementId, int entityId, int entityIndex)
     {{
         Pool = pool;
+        Id = elementId;
         EntityId = entityId;
         EntityIndex = entityIndex;
-        Id = elementId;
+    }}
+
+    public Pool GetPool() => Pool;
+
+    public int GetOffset(int index)
+    {{
+        return Schema.Offset + (EntityId - 1) * Pool.Schema.Size + Pool.Properties[EntityIndex].Offset + (Id - 1) * {name}.Size + _properties[index].Offset;
     }}
     {string.Join(Environment.NewLine, methods)}
-
     private static Property[] _properties = new Property[]
     {{{string.Join(",", metaData.Select(p => $@"
         new({p.name}, {p.size}, {p.offset})"))}
@@ -222,11 +232,9 @@ public struct {name} : IElement<{name}>,
 
     public const int Size = {string.Join(" + ", metaData.Select(p => p.size))};
 
-    public static int GetSize() => Size;
-
-    public static {name} Create(Pool pool, int entityId, int entityIndex, int elementId)
+    public static {name} Create(Pool pool, int elementId, int entityId, int entityIndex)
     {{
-        return new {name}(pool, entityId, entityIndex, elementId);
+        return new {name}(pool, elementId, entityId, entityIndex);
     }}
 }}");
         }

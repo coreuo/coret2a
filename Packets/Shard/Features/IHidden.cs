@@ -4,6 +4,6 @@ namespace Packets.Shard.Features;
 
 public interface IHidden
 {
-    [Flag("Status", 4)]
+    [Flag("Status", 7)]
     bool Hidden { get; }
 }

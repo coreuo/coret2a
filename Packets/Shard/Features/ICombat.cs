@@ -4,8 +4,16 @@ namespace Packets.Shard.Features;
 
 public interface ICombat
 {
-    [Flag("Status", 4)]
-    bool Combat { get; }
+    [Flag("Status", 6)]
+    bool Combat { get; set; }
+
+    internal void ReadCombat<TData>(TData data)
+        where TData : IData
+    {
+        Combat = data.ReadByte() > 0;
+
+        data.Offset += 3;
+    }
 
     internal void WriteCombat<TData>(TData data)
         where TData : IData

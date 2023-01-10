@@ -9,4 +9,7 @@ public interface IMobile
 
     [Size(60)]
     Span<char> Name { get; }
+
+    [Flag("Status", 6)]
+    bool Combat { set; }
 }

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace Core.Launcher.Domain;
 
@@ -17,14 +16,12 @@ public interface IEntity<TEntity> : IEntity
 {
     public static abstract Property[] GetProperties();
 
+    public static abstract int GetSize();
+
     public static abstract int GetPoolCapacity();
 }
 
-public interface IEntity
+public interface IEntity : IObject
 {
-    int Id { get; }
-
     public int Free { get; set; }
-
-    public Pool GetPool();
 }

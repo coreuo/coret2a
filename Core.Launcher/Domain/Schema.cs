@@ -9,9 +9,9 @@ public class Schema
 
     internal string Name { get; }
 
-    internal int Size { get; private set; }
+    public int Size { get; private set; }
 
-    internal const int Offset = 4;
+    public const int Offset = 4;
 
     internal Schema(string name)
     {
@@ -29,28 +29,21 @@ public class Schema
 
         for (var i = 0; i < _collection.Length; i++)
         {
-            properties[i] = new Property(_collection[i].Name, _collection[i].Size);
+            properties[i] = new Property(_collection[i].Name, _collection[i].Size, _collection[i].Offset);
         }
 
-        schema.ReadFromCode(properties);
+        schema._collection = properties;
+
+        schema.Size = Size;
 
         return schema;
     }
 
-    internal void ReadFromCode(Property[] properties)
+    internal void ReadFromCode(Property[] properties, int size)
     {
         _collection = properties;
 
-        var offset = 0;
-
-        foreach (var property in properties)
-        {
-            property.Offset = offset;
-
-            offset += property.Size;
-        }
-
-        Size = offset;
+        Size = size;
     }
 
     internal void ReadFromFile(string path)

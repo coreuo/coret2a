@@ -1,7 +1,7 @@
 ﻿using System.IO.MemoryMappedFiles;
 using System.Runtime.CompilerServices;
 using Core.Abstract.Domain;
-using Core.Launcher.EntityExtensions;
+using Core.Launcher.Extensions;
 
 namespace Core.Launcher.Domain;
 
@@ -212,11 +212,14 @@ public abstract class Pool<TEntity> : Pool
 
 public abstract class Pool : IDisposable
 {
+#if DEBUG
+    public unsafe Span<byte> Array => new (Pointer, Length * Size);
+#endif
     internal string? Label { get; }
 
-    internal Schema Schema { get; }
+    public Schema Schema { get; }
 
-    internal Property[] Properties { get; }
+    public Property[] Properties { get; }
 
     private readonly unsafe byte* _pointer;
 
@@ -248,18 +251,6 @@ public abstract class Pool : IDisposable
             Free = (int*)Pointer;
         }
         IsSynchronized = isSynchronized;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal unsafe byte* GetPointer(int id)
-    {
-        return Pointer + Schema.Offset + (id - 1) * Schema.Size;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal unsafe byte* GetPointer(int id, int index)
-    {
-        return GetPointer(id) + Properties[index].Offset;
     }
 
     internal void ReadFromFile(string path)

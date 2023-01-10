@@ -1,69 +1,68 @@
 ﻿using Core.Launcher.Domain;
 using System.Collections;
 
-namespace Core.Launcher.Collections
+namespace Core.Launcher.Collections;
+
+public readonly struct Array<TElement> : IReadOnlyList<TElement>
+    where TElement : IElement<TElement>
 {
-    public readonly struct Array<TElement> : IReadOnlyList<TElement>
-        where TElement : IElement<TElement>
+    public int Count { get; }
+
+    public Pool Pool { get; }
+
+    public int Id { get; }
+
+    public int Index { get; }
+
+    public TElement this[int index] => TElement.Create(Pool, index + 1, Id, Index);
+
+    public Array(int count, Pool pool, int id, int index)
     {
-        public int Count { get; }
+        Count = count;
+        Pool = pool;
+        Id = id;
+        Index = index;
+    }
 
-        public Pool Pool { get; }
+    public IEnumerator<TElement> GetEnumerator()
+    {
+        return new Enumerator(this);
+    }
 
-        public int Id { get; }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        public int Index { get; }
+    public struct Enumerator : IEnumerator<TElement>
+    {
+        private readonly Array<TElement> _array;
 
-        public TElement this[int index] => TElement.Create(Pool, Id, Index, index + 1);
+        private int _next = -1;
 
-        public Array(int count, Pool pool, int id, int index)
+        public Enumerator(Array<TElement> array)
         {
-            Count = count;
-            Pool = pool;
-            Id = id;
-            Index = index;
+            _array = array;
         }
 
-        public IEnumerator<TElement> GetEnumerator()
+        public bool MoveNext()
         {
-            return new Enumerator(this);
+            _next++;
+
+            return _next < _array.Count;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public void Reset()
         {
-            return GetEnumerator();
+            _next = -1;
         }
 
-        public struct Enumerator : IEnumerator<TElement>
+        public TElement Current => _array[_next];
+
+        object IEnumerator.Current => Current;
+
+        public void Dispose()
         {
-            private readonly Array<TElement> _array;
-
-            private int _next = -1;
-
-            public Enumerator(Array<TElement> array)
-            {
-                _array = array;
-            }
-
-            public bool MoveNext()
-            {
-                _next++;
-
-                return _next < _array.Count;
-            }
-
-            public void Reset()
-            {
-                _next = -1;
-            }
-
-            public TElement Current => _array[_next];
-
-            object IEnumerator.Current => Current;
-
-            public void Dispose()
-            {
-            }
         }
     }
 }

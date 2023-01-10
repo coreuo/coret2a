@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Core.Abstract.Domain;
 using Core.Launcher.Domain;
-using Core.Launcher.EntityExtensions;
+using Core.Launcher.Extensions;
 
 namespace Core.Launcher.Collections;
 

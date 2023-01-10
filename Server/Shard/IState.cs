@@ -18,9 +18,19 @@ public interface IState<out TAccount, TMobile>
 
     byte Mode { get; }
 
+    [Flag("Status", 6)]
+    bool Combat { get; }
+
     internal void TransferName()
     {
         Character.Name.CopyTo(Name);
+    }
+
+    internal void TransferCombat()
+    {
+        var character = Character;
+
+        character.Combat = Combat;
     }
 
     internal bool IsSelfTargeted()

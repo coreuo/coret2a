@@ -23,7 +23,7 @@ public interface IShard<in TState, TAccount, TMobile>
 
     void PacketLight(TState state);
 
-    void PacketCombat(TState state);
+    void PacketCombatResponse(TState state);
 
     void PacketEquippedMobile(TState state);
 
@@ -38,6 +38,8 @@ public interface IShard<in TState, TAccount, TMobile>
     void PacketOpenPaperDoll(TState state);
 
     void PacketSkills(TState state);
+
+    void PacketNakedMobile(TState state);
 
     [Priority(1.0)]
     public void OnPacketPostLogin(TState state)
@@ -62,7 +64,7 @@ public interface IShard<in TState, TAccount, TMobile>
 
         PacketLoginConfirm(state);
 
-        PacketCombat(state);
+        PacketCombatResponse(state);
 
         PacketEquippedMobile(state);
 
@@ -82,7 +84,7 @@ public interface IShard<in TState, TAccount, TMobile>
     [Priority(1.0)]
     public void OnPacketRequestObjectUse(TState state)
     {
-        if(state.IsSelfTargeted()) PacketOpenPaperDoll(state);
+        if (state.IsSelfTargeted()) PacketOpenPaperDoll(state);
     }
 
     [Priority(1.0)]
@@ -97,5 +99,15 @@ public interface IShard<in TState, TAccount, TMobile>
                 return;
             }
         }
+    }
+
+    [Priority(1.0)]
+    public void OnPacketCombatRequest(TState state)
+    {
+        state.TransferCombat();
+
+        PacketNakedMobile(state);
+
+        PacketCombatResponse(state);
     }
 }

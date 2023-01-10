@@ -4,6 +4,6 @@ namespace Packets.Shard.Features;
 
 public interface IBlessed
 {
-    [Flag("Status", 2)]
+    [Flag("Status", 3)]
     bool Blessed { get; }
 }

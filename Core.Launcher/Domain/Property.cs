@@ -2,7 +2,7 @@
 
 public class Property
 {
-    internal int Offset { get; set; }
+    public int Offset { get; set; }
 
     public string Name { get; }
 
@@ -13,5 +13,10 @@ public class Property
         Name = name;
         Size = size;
         Offset = offset;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} {Size} at {Offset}";
     }
 }

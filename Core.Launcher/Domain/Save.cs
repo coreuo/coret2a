@@ -62,7 +62,7 @@ public abstract class Save<TSave> : IDisposable
 
         if (File.Exists(path)) schema.ReadFromFile(path);
 
-        else schema.ReadFromCode(Array.Empty<Property>());
+        else schema.ReadFromCode(Array.Empty<Property>(), 0);
 
         return schema;
     }
@@ -72,7 +72,7 @@ public abstract class Save<TSave> : IDisposable
     {
         var schema = new Schema(typeof(T).Name);
 
-        schema.ReadFromCode(T.GetProperties());
+        schema.ReadFromCode(T.GetProperties(), T.GetSize());
 
         return schema;
     }

@@ -39,6 +39,8 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
     void PacketClientQuery(TState state);
 
+    void PacketCombatRequest(TState state);
+
     void InternalShardAuthorization();
 
     [Priority(1.0)]
@@ -126,6 +128,16 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
                 EndIncomingPacket(data);
 
                 PacketPreLogin(state);
+
+                return;
+            }
+            case 0x72:
+            {
+                state.ReadCombat(data);
+
+                EndIncomingPacket(data);
+
+                PacketCombatRequest(state);
 
                 return;
             }
@@ -322,11 +334,41 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     }
 
     [Priority(1.0)]
-    public void OnPacketCombat(TState state)
+    public void OnPacketCombatResponse(TState state)
     {
         var data = BeginOutgoingNoSizePacket(0x72);
 
         state.WriteCombat(data);
+
+        EndOutgoingNoSizePacket(data);
+
+        state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketNakedMobile(TState state)
+    {
+        var character = state.Character;
+
+        var data = BeginOutgoingNoSizePacket(0x77);
+
+        character.WriteId(data);
+
+        character.WriteBody(data);
+
+        character.WriteX(data);
+
+        character.WriteY(data);
+
+        character.WriteSByteZ(data);
+
+        character.WriteDirection(data);
+
+        character.WriteHue(data);
+
+        character.WriteStatus(data);
+
+        character.WriteNotoriety(data);
 
         EndOutgoingNoSizePacket(data);
 

@@ -4,6 +4,6 @@ namespace Packets.Shard.Features;
 
 public interface IPoison
 {
-    [Flag("Status", 1)]
+    [Flag("Status", 2)]
     bool Poison { get; }
 }
