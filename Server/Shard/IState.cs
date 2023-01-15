@@ -11,7 +11,7 @@ public interface IState<out TAccount, TMobile>
 
     TMobile Character { get; }
 
-    [Size(60)]
+    [Size(30)]
     Span<char> Name { get; }
 
     int Target { get; }

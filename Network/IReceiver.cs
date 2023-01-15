@@ -22,8 +22,7 @@ public interface IReceiver<TData, out TDataConcurrentQueue> : IState, ITransfer<
         _ = OnReceiveAsync();
     }
 
-    [Priority(1.0)]
-    public async ValueTask<int> OnReceiveAsync()
+    private async ValueTask<int> OnReceiveAsync()
     {
 #if DEBUG
         Debug($"connected from {EndPoint}");

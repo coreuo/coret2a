@@ -20,8 +20,6 @@ namespace Core.Generator.Extensions
                 .Single();
 
             if (@interface.HasEntityAttribute() || @interface.HasElementAttribute()) return @interface.ResolveEntityOrElementParameter(parentVariant, generalSubjects);
-            /*if (@interface.IsPool()) return $"Core.Launcher.Domain.Pool<Core.Launcher.Domain.Save, {@interface.TypeArguments.Single()}>";
-            if (@interface.IsCache()) return $"Core.Launcher.Domain.Cache<{@interface.TypeArguments.Single()}>";*/
 
             var nested = (ITypeParameterSymbol)@interface.TypeArguments.Single();
 
@@ -129,16 +127,6 @@ namespace Core.Generator.Extensions
         {
             return attribute.AttributeClass?.Name == "SynchronizedAttribute";
         }
-
-        /*public static bool IsPool(this INamedTypeSymbol symbol)
-        {
-            return symbol.Name == "IPool";
-        }
-
-        public static bool IsCache(this INamedTypeSymbol symbol)
-        {
-            return symbol.Name == "ICache";
-        }*/
 
         public static bool IsProducerConsumerCollection(this INamedTypeSymbol symbol)
         {

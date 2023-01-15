@@ -8,7 +8,7 @@ public interface IShardInfo
 {
     int Id { get; }
 
-    [Size(32)]
+    [Size(30)]
     Span<char> Name { get; }
 
     [Size(15)]

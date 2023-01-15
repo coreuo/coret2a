@@ -16,8 +16,7 @@ public interface ISender<TData> : IState, ITransfer<TData>, IThread
         _ = OnSendAsync(data);
     }
 
-    [Priority(1.0)]
-    public async ValueTask<int> OnSendAsync(TData data)
+    private async ValueTask<int> OnSendAsync(TData data)
     {
         if (!Locked) return 3;
 

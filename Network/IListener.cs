@@ -31,8 +31,7 @@ public interface IListener<TState, out TStateConcurrentQueue> : ISocket, IThread
         _ = OnListenAsync();
     }
 
-    [Priority(1.0)]
-    public async ValueTask<int> OnListenAsync()
+    private async ValueTask<int> OnListenAsync()
     {
         Locked = true;
 

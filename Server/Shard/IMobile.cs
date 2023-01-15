@@ -7,7 +7,7 @@ public interface IMobile
 {
     int Id { get; }
 
-    [Size(60)]
+    [Size(30)]
     Span<char> Name { get; }
 
     [Flag("Status", 6)]

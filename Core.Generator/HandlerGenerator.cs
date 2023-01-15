@@ -50,7 +50,7 @@ namespace {labels.@namespace};
             var constraints = new[]{rootConstraint}.Concat(@interface.TypeParameters.SelectMany(p => p.ConstraintTypes.Select(c => $@"
     where {p} : {c}"))).ToImmutableList();
 
-            var handlers = @interface.GetNestedMethods(false).Select(m => m.ResolveEntityMethodHandlerDefinition(rootType, rootName));
+            var handlers = @interface.GetNestedMethods().Where(m => !m.IsAbstract).Select(m => m.ResolveEntityMethodHandlerDefinition(rootType, rootName));
 
             var @class = $@"
 public static class {root}Handlers<{string.Join(", ", types)}>{string.Join(string.Empty, constraints)}
