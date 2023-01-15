@@ -14,9 +14,9 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
 #if DEBUG
     string Identity { get; }
 #endif
-    [Size(30)] Span<char> Name { get; }
+    Span<char> Name { get; }
 
-    [Size(30)] Span<char> Password { get; }
+    Span<char> Password { get; }
 
     int AccessKey { get; }
 

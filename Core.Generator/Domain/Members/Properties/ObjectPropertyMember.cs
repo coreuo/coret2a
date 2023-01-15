@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -30,13 +31,38 @@ namespace Core.Generator.Domain.Members.Properties
 
             public ObjectPropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<ObjectPropertyMember> members) : base(@object, name, type, typeName, members)
             {
-                Link = Members
+                var source = Members
+                    .GroupBy(m => m.Original, SymbolEqualityComparer.Default)
+                    .Select(g => g.First())
+                    .ToImmutableArray();
+
+                var linkedSource = source
                     .Where(m => m.LinkAttribute != null)
                     .Where(m => m.LinkAttribute.ConstructorArguments.Length == 1)
+                    .ToImmutableArray();
+
+                var links = linkedSource
                     .Select(m => m.LinkAttribute.ConstructorArguments[0].Value)
                     .OfType<string>()
-                    .Distinct()
-                    .SingleOrDefault();
+                    .ToImmutableArray();
+
+                if (links.Length > 1)
+                    foreach (var member in linkedSource)
+                    {
+                        Object.Root.Context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "LG0005",
+                                    "Multiple link attributes",
+                                    "Multiple link attributes detected {0}",
+                                    "Attributes",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                null,
+                                $"{member.Original}"));
+                    }
+
+                Link = links.SingleOrDefault();
             }
 
             public override string ResolveGetter()

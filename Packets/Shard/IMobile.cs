@@ -1,4 +1,5 @@
 ﻿using Core.Abstract.Attributes;
+using Packets.Server.Features;
 using Packets.Shard.Features;
 
 namespace Packets.Shard;
@@ -14,14 +15,14 @@ public interface IMobile<TMap, TSkill, TSkillArray> : IMobile,
 }
 
 [Entity("Mobile")]
-public interface IMobile :
+public interface IMobile : 
+    IName,
     IPassword,
     ISunlight,
     ILight,
     IWeather,
     IDirection,
     INotoriety,
-    IName,
     IStatus,
     IId,
     IBody,

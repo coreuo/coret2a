@@ -1,20 +1,15 @@
 ﻿using System.Net;
 using Core.Abstract.Attributes;
 using Core.Abstract.Extensions;
+using Packets.Server.Features;
 
 namespace Packets.Login.Features;
 
-public interface IShardInfo
+public interface IShardInfo :
+    IName,
+    IEndPoint
 {
     int Id { get; }
-
-    [Size(30)]
-    Span<char> Name { get; }
-
-    [Size(15)]
-    Span<char> IpAddress { get; }
-
-    int Port { get; }
 
     internal void WriteShardDescription<TData>(TData data)
         where TData : IData

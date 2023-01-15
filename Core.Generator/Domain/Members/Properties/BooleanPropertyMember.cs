@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -30,13 +31,38 @@ namespace Core.Generator.Domain.Members.Properties
 
             public BooleanPropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<BooleanPropertyMember> members) : base(@object, name, type, typeName, members)
             {
-                Flag = Members
+                var source = Members
+                    .GroupBy(m => m.Original, SymbolEqualityComparer.Default)
+                    .Select(g => g.First())
+                    .ToImmutableArray();
+
+                var flaggedSource = source
                     .Where(m => m.FlagAttribute != null)
                     .Where(m => m.FlagAttribute.ConstructorArguments.Length == 2)
+                    .ToImmutableArray();
+
+                var flags = flaggedSource
                     .Where(m => m.FlagAttribute.ConstructorArguments[0].Value is string flag && !string.IsNullOrEmpty(flag) && m.FlagAttribute.ConstructorArguments[1].Value is int)
                     .Select(m => ((string)m.FlagAttribute.ConstructorArguments[0].Value, m.FlagAttribute.ConstructorArguments[1].Value is int value ? value : 0))
-                    .Distinct()
-                    .SingleOrDefault();
+                    .ToImmutableArray();
+
+                if (flags.Length > 1)
+                    foreach (var member in flaggedSource)
+                    {
+                        Object.Root.Context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "LG0004",
+                                    "Multiple flag attributes",
+                                    "Multiple flag attributes detected {0}",
+                                    "Attributes",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                null,
+                                $"{member.Original}"));
+                    }
+
+                Flag = flags.SingleOrDefault();
             }
 
             public override string ResolveGetter()

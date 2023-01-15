@@ -1,6 +1,6 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Packets.Shard.Features;
+namespace Packets.Server.Features;
 
 public interface IPassword
 {

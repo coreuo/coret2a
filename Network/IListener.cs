@@ -12,7 +12,6 @@ public interface IListener<TState, out TStateConcurrentQueue> : ISocket, IThread
 #if DEBUG
     string Identity { get; }
 #endif
-    [Size(15)]
     Span<char> IpAddress { get; }
 
     int Port { get; set; }
@@ -102,9 +101,6 @@ public interface IListener<TState, out TStateConcurrentQueue> : ISocket, IThread
 #endif
                 return HaltAccept(state, 2);
             }
-#if DEBUG
-            Identity.CopyTo(state.Identity);
-#endif
 
             ListenQueue.TryAdd(state);
 

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -43,13 +45,56 @@ namespace Core.Generator.Domain.Members.Properties
             {
                 GenericType = Members.Select(m => m.GenericType).Distinct(SymbolEqualityComparer.Default).Single();
 
-                Size = Members
+                var source = Members
+                    .GroupBy(m => m.Original, SymbolEqualityComparer.Default)
+                    .Select(g => g.First())
+                    .ToImmutableArray();
+
+                var sizedSource = source
                     .Where(m => m.SizeAttribute != null)
                     .Where(m => m.SizeAttribute.ConstructorArguments.Length == 1)
+                    .ToImmutableArray();
+
+                var sizes = sizedSource
                     .Select(m => m.SizeAttribute.ConstructorArguments[0].Value)
                     .OfType<int>()
-                    .Distinct()
-                    .Single();
+                    .ToImmutableArray();
+
+                if (!sizes.Any())
+                {
+                    foreach (var member in source)
+                    {
+                        Object.Root.Context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "LG0002",
+                                    "Span size attribute is missing",
+                                    "Span size attribute is missing {0}",
+                                    "Attributes",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                null,
+                                $"{member.Original}"));
+                    }
+                }
+
+                else if (sizes.Length > 1)
+                    foreach (var member in sizedSource)
+                    {
+                        Object.Root.Context.ReportDiagnostic(
+                            Diagnostic.Create(
+                                new DiagnosticDescriptor(
+                                    "LG0003",
+                                    "Multiple span size attributes",
+                                    "Multiple span size attributes detected {0}",
+                                    "Attributes",
+                                    DiagnosticSeverity.Error,
+                                    true),
+                                null,
+                                $"{member.Original}"));
+                    }
+
+                Size = sizes.Single();
             }
 
             public override string ResolveGetter()

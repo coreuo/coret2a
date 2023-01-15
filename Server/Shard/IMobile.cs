@@ -7,9 +7,7 @@ public interface IMobile
 {
     int Id { get; }
 
-    [Size(30)]
     Span<char> Name { get; }
 
-    [Flag("Status", 6)]
     bool Combat { set; }
 }

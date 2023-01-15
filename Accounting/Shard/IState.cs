@@ -12,10 +12,8 @@ public interface IState<TAccount, in TCharacter, TCharacterCollection>
 
     TCharacter Character { set; }
 
-    [Size(30)]
     Span<char> Name { get; }
 
-    [Size(30)]
     Span<char> Password { get; }
 
     int AccessKey { get; }

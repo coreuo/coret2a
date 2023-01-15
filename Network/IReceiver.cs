@@ -100,7 +100,7 @@ public interface IReceiver<TData, out TDataConcurrentQueue> : IState, ITransfer<
 #if DEBUG
     private void Debug(string text, Exception? exception = null)
     {
-        Console.WriteLine($"[{Identity.AsText()}] {text}{(exception != null ? $"\n{exception}" : null)}");
+        Console.WriteLine($"[{Identity}] {text}{(exception != null ? $"\n{exception}" : null)}");
     }
 #endif
 }

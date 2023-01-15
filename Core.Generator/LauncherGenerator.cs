@@ -1,4 +1,5 @@
-﻿using Core.Generator.Domain;
+﻿using System;
+using Core.Generator.Domain;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
@@ -15,19 +16,36 @@ namespace Core.Generator
         {
             if (!context.Compilation.Assembly.HasLauncherAttribute()) return;
 
-            var root = new Root();
-
-            root.Resolve(context.Compilation);
-
-            var saveCode = root.GetCode();
-
-            context.AddSource("Save.cs", saveCode);
-
-            foreach (var @object in root.Objects.Values)
+            try
             {
-                var objectCode = @object.GetCode();
+                var root = new Root();
 
-                context.AddSource(@object.Name, objectCode);
+                root.Resolve(context);
+
+                var saveCode = root.GetCode();
+
+                context.AddSource("Save.cs", saveCode);
+
+                foreach (var @object in root.Objects.Values)
+                {
+                    var objectCode = @object.GetCode();
+
+                    context.AddSource(@object.Name, objectCode);
+                }
+            }
+            catch(Exception e)
+            {
+                context.ReportDiagnostic(
+                    Diagnostic.Create(
+                        new DiagnosticDescriptor(
+                            "LG0001",
+                            "Launcher generator failed",
+                            "Launcher generator failed {0}",
+                            "General",
+                            DiagnosticSeverity.Error,
+                            true),
+                        null,
+                        $"{e}"));
             }
         }
     }

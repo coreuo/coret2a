@@ -6,7 +6,6 @@ namespace Network;
 [Synchronized]
 public interface IData
 {
-    [Size(2048)]
     Span<byte> Value { get; }
 
     int Start { get; set; }

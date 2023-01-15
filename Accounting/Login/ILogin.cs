@@ -13,7 +13,7 @@ public interface ILogin<TState, TShard, TAccount, out TAccountCollection>
 #if DEBUG
     string Identity { get; }
 #endif
-    [Size(30)] Span<char> Name { get; }
+    Span<char> Name { get; }
 
     TAccountCollection Accounts { get; }
 

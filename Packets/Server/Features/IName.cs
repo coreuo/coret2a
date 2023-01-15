@@ -1,10 +1,11 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Packets.Login.Features;
+namespace Packets.Server.Features;
 
 public interface IName
 {
-    [Size(30)] Span<char> Name { get; }
+    [Size(30)] 
+    Span<char> Name { get; }
 
     internal void ReadName<TData>(TData data)
         where TData : IData

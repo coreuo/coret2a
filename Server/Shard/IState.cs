@@ -11,14 +11,12 @@ public interface IState<out TAccount, TMobile>
 
     TMobile Character { get; }
 
-    [Size(30)]
     Span<char> Name { get; }
 
     int Target { get; }
 
     byte Mode { get; }
 
-    [Flag("Status", 6)]
     bool Combat { get; }
 
     internal void TransferName()

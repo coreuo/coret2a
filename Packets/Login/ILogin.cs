@@ -1,5 +1,6 @@
 ﻿using Core.Abstract.Attributes;
 using Packets.Login.Features;
+using Packets.Server.Features;
 
 namespace Packets.Login;
 
@@ -7,6 +8,7 @@ namespace Packets.Login;
 public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
     IName,
     IPassword,
+    IEndPoint,
     IStatus,
     ITransfer<TData>,
     IShardList<TShard, TShardCollection>
@@ -19,6 +21,7 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
 #if DEBUG
     string Identity { get; }
 #endif
+
     void PacketAccountLoginRequest(TState state);
 
     void PacketHardwareInfo(TState state);

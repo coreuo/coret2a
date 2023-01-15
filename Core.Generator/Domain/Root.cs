@@ -11,15 +11,19 @@ namespace Core.Generator.Domain
 {
     public class Root
     {
+        public GeneratorExecutionContext Context { get; private set; }
+
         public ImmutableDictionary<string, Object> Objects { get; set; }
 
         public ImmutableList<(string name, bool synchronized)> Pools { get; set; }
 
         public ImmutableList<(string fullType, string type)> Caches { get; set; }
 
-        public void Resolve(Compilation compilation)
+        public void Resolve(GeneratorExecutionContext context)
         {
-            Objects = CreateObjects(compilation).ToImmutableDictionary(o => o.Name, o => o);
+            Context = context;
+
+            Objects = CreateObjects().ToImmutableDictionary(o => o.Name, o => o);
 
             AssignMembers();
 
@@ -32,9 +36,9 @@ namespace Core.Generator.Domain
             Caches = GetCached().Distinct().OrderBy(c => c.type).ToImmutableList();
         }
 
-        private IEnumerable<Object> CreateObjects(Compilation compilation)
+        private IEnumerable<Object> CreateObjects()
         {
-            var assemblies = compilation.GetReferencedAssemblies();
+            var assemblies = Context.Compilation.GetReferencedAssemblies();
 
             var interfaces = assemblies
                 .SelectMany(EntityExtensions.GetEntityAndElementInterfaces)

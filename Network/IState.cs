@@ -6,8 +6,7 @@ namespace Network;
 [Entity("State")]
 public interface IState : ISocket
 {
-    [Size(30)]
-    Span<char> Identity { get; }
+    string Identity { get; }
 }
 
 [Entity("State")]
