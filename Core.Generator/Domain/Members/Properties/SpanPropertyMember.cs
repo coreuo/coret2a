@@ -77,8 +77,8 @@ namespace Core.Generator.Domain.Members.Properties
                                 $"{member.Original}"));
                     }
                 }
-
                 else if (sizes.Length > 1)
+                {
                     foreach (var member in sizedSource)
                     {
                         Object.Root.Context.ReportDiagnostic(
@@ -93,6 +93,7 @@ namespace Core.Generator.Domain.Members.Properties
                                 null,
                                 $"{member.Original}"));
                     }
+                }
 
                 Size = sizes.Single();
             }

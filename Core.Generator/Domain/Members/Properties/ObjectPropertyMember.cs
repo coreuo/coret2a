@@ -47,6 +47,7 @@ namespace Core.Generator.Domain.Members.Properties
                     .ToImmutableArray();
 
                 if (links.Length > 1)
+                {
                     foreach (var member in linkedSource)
                     {
                         Object.Root.Context.ReportDiagnostic(
@@ -61,6 +62,7 @@ namespace Core.Generator.Domain.Members.Properties
                                 null,
                                 $"{member.Original}"));
                     }
+                }
 
                 Link = links.SingleOrDefault();
             }

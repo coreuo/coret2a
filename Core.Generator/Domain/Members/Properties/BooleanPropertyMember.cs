@@ -47,6 +47,7 @@ namespace Core.Generator.Domain.Members.Properties
                     .ToImmutableArray();
 
                 if (flags.Length > 1)
+                {
                     foreach (var member in flaggedSource)
                     {
                         Object.Root.Context.ReportDiagnostic(
@@ -61,6 +62,7 @@ namespace Core.Generator.Domain.Members.Properties
                                 null,
                                 $"{member.Original}"));
                     }
+                }
 
                 Flag = flags.SingleOrDefault();
             }
