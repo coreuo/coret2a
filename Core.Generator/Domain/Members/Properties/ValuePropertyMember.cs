@@ -29,12 +29,12 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.Get{TypeName}({Property.Index});";
+                return $"get => this.Get{TypeName}({ResolveOffset(Property)});";
             }
 
             public override string ResolveSetter()
             {
-                return $"set => this.Set{TypeName}({Property.Index}, value);";
+                return $"set => this.Set{TypeName}({ResolveOffset(Property)}, value);";
             }
 
             public override IEnumerable<Property> ResolveProperties()

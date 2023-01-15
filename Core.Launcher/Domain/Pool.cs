@@ -213,7 +213,7 @@ public abstract class Pool<TEntity> : Pool
 public abstract class Pool : IDisposable
 {
 #if DEBUG
-    public unsafe Span<byte> Array => new (Pointer, Length * Size);
+    public unsafe Span<byte> Array => new (Pointer.Value, Length * Size);
 #endif
     internal string? Label { get; }
 
@@ -223,7 +223,7 @@ public abstract class Pool : IDisposable
 
     private readonly unsafe byte* _pointer;
 
-    internal unsafe byte* Pointer => _pointer;
+    public unsafe Pointer Pointer => new (_pointer);
 
     internal int Size { get; }
 
@@ -248,7 +248,7 @@ public abstract class Pool : IDisposable
         unsafe
         {
             Accessor.SafeMemoryMappedViewHandle.AcquirePointer(ref _pointer);
-            Free = (int*)Pointer;
+            Free = (int*)Pointer.Value;
         }
         IsSynchronized = isSynchronized;
     }

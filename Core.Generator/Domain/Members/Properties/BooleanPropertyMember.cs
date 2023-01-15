@@ -70,20 +70,20 @@ namespace Core.Generator.Domain.Members.Properties
             public override string ResolveGetter()
             {
                 return Property != null
-                    ? $"get => this.Get{TypeName}({Property.Index});"
-                    : $"get => this.GetFlag({GetFlagPropertyIndex()}, {Flag.index});";
+                    ? $"get => this.Get{TypeName}({ResolveOffset(Property)});"
+                    : $"get => this.GetFlag({GetFlagPropertyOffset()}, {Flag.index});";
             }
 
             public override string ResolveSetter()
             {
                 return Property != null
-                    ? $"set => this.Set{TypeName}({Property.Index}, value);"
-                    : $"set => this.SetFlag({GetFlagPropertyIndex()}, {Flag.index}, value);";
+                    ? $"set => this.Set{TypeName}({ResolveOffset(Property)}, value);"
+                    : $"set => this.SetFlag({GetFlagPropertyOffset()}, {Flag.index}, value);";
             }
 
-            private int GetFlagPropertyIndex()
+            private string GetFlagPropertyOffset()
             {
-                return Object.Properties.Single(p => p.Identifier == Flag.name).Index;
+                return ResolveOffset(Object.Properties.Single(p => p.Identifier == Flag.name));
             }
 
             public override IEnumerable<Property> ResolveProperties()

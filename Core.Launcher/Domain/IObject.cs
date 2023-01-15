@@ -4,7 +4,7 @@ public interface IObject
 {
     int Id { get; }
 
-    int GetOffset(int index);
+    Pointer Pointer { get; }
 
     public Pool GetPool();
 }

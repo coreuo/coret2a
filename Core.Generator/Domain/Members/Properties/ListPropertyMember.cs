@@ -39,7 +39,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetList({CountProperty.Index}, Pool.Save.{Item.Name}Store, {OwnerProperty.Index});";
+                return $"get => this.GetList({ResolveOffset(CountProperty)}, Pool.Save.{Item.Name}Store, {ResolveOffset(OwnerProperty)});";
             }
 
             public override string ResolveSize()

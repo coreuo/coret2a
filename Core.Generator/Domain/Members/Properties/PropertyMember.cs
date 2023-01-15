@@ -129,6 +129,11 @@ namespace Core.Generator.Domain.Members.Properties
                 return null;
             }
 
+            protected string ResolveOffset(Property property)
+            {
+                return $"{property.Object.Name}.{property.CodeName}Offset";
+            }
+
             protected Property ResolveProperty()
             {
                 return ResolveProperty(Object, Name);

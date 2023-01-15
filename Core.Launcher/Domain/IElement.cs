@@ -11,7 +11,4 @@ public interface IElement<TElement> : IElement
 
 public interface IElement : IObject
 {
-    int EntityId { get; }
-
-    int EntityIndex { get; }
 }

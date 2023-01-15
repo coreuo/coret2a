@@ -8,62 +8,62 @@ namespace Core.Launcher.Extensions;
 public static class ObjectExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TValue GetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int index)
+    public static TValue GetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset)
         where TObject : IObject
     {
-        var id = @object.GetInt32(index);
+        var id = @object.GetInt32(offset);
 
         return store.GetValue(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int index, TValue value)
+    public static void SetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset, TValue value)
         where TObject : IObject
     {
         var id = store.GetId(value);
 
-        @object.SetInt32(index, id);
+        @object.SetInt32(offset, id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Span<TValue> GetSpan<TObject, TValue>(this TObject @object, int index, int length)
+    public static unsafe Span<TValue> GetSpan<TObject, TValue>(this TObject @object, int offset, int length)
         where TValue : struct
         where TObject : IObject
     {
-        var pointer = @object.GetPointer(index);
+        var pointer = @object.GetPointer(offset);
 
         return new Span<TValue>(pointer, length);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe ConcurrentQueue<TChild> GetConcurrentQueue<TParent, TChild>(this TParent parent, int parentIndex, IPool<TChild> children, int childrenIndex)
+    public static unsafe ConcurrentQueue<TChild> GetConcurrentQueue<TParent, TChild>(this TParent parent, int parentOffset, IPool<TChild> children, int childrenOffset)
         where TParent : IEntity
         where TChild : IEntity
     {
-        return new ConcurrentQueue<TChild>(parent.GetInt32Pointer(parentIndex), children, childrenIndex);
+        return new ConcurrentQueue<TChild>(parent.GetInt32Pointer(parentOffset), children, childrenOffset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Collections.List<TChild> GetList<TParent, TChild>(this TParent parent, int parentIndex, IPool<TChild> children, int childrenIndex)
+    public static unsafe Collections.List<TChild> GetList<TParent, TChild>(this TParent parent, int parentOffset, IPool<TChild> children, int childrenOffset)
         where TParent : IEntity
         where TChild : IEntity
     {
-        return new Collections.List<TChild>(parent.Id, parent.GetInt32Pointer(parentIndex), children, childrenIndex);
+        return new Collections.List<TChild>(parent.Id, parent.GetInt32Pointer(parentOffset), children, childrenOffset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Array<TChild> GetArray<TParent, TChild>(this TParent parent, int index, int count)
+    public static Array<TChild> GetArray<TParent, TChild>(this TParent parent, int offset, int count)
         where TParent : IObject
         where TChild : IElement<TChild>
     {
-        return new Array<TChild>(count, parent.GetPool(), parent.Id, index);
+        return new Array<TChild>(count, parent.GetPool(), parent.Id, offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int ExchangeInt32<TObject>(this TObject @object, int index, int value)
+    public static unsafe int ExchangeInt32<TObject>(this TObject @object, int offset, int value)
         where TObject : IObject
     {
-        var p = @object.GetInt32Pointer(index);
+        var p = @object.GetInt32Pointer(offset);
 
         var result = *p;
 
@@ -73,17 +73,17 @@ public static class ObjectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool GetFlag<TObject>(this TObject @object, int index, int flag)
+    public static unsafe bool GetFlag<TObject>(this TObject @object, int offset, int flag)
         where TObject : IObject
     {
-        return (*@object.GetBytePointer(index) & (1 << flag)) > 0;
+        return (*@object.GetBytePointer(offset) & (1 << flag)) > 0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetFlag<TObject>(this TObject @object, int index, int flag, bool value)
+    public static unsafe void SetFlag<TObject>(this TObject @object, int offset, int flag, bool value)
         where TObject : IObject
     {
-        var p = @object.GetBytePointer(index);
+        var p = @object.GetBytePointer(offset);
 
         if (value) *p |= (byte)(1 << flag);
 
@@ -91,158 +91,156 @@ public static class ObjectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe sbyte GetSByte<TObject>(this TObject @object, int index)
+    public static unsafe sbyte GetSByte<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetSBytePointer(index);
+        return *@object.GetSBytePointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetSByte<TObject>(this TObject @object, int index, sbyte value)
+    public static unsafe void SetSByte<TObject>(this TObject @object, int offset, sbyte value)
         where TObject : IObject
     {
-        *@object.GetSBytePointer(index) = value;
+        *@object.GetSBytePointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe sbyte* GetSBytePointer<TObject>(this TObject @object, int index)
+    internal static unsafe sbyte* GetSBytePointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (sbyte*)@object.GetPointer(index);
+        return (sbyte*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe ushort GetUInt16<TObject>(this TObject @object, int index)
+    public static unsafe ushort GetUInt16<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetUInt16Pointer(index);
+        return *@object.GetUInt16Pointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetUInt16<TObject>(this TObject @object, int index, ushort value)
+    public static unsafe void SetUInt16<TObject>(this TObject @object, int offset, ushort value)
         where TObject : IObject
     {
-        *@object.GetUInt16Pointer(index) = value;
+        *@object.GetUInt16Pointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe ushort* GetUInt16Pointer<TObject>(this TObject @object, int index)
+    internal static unsafe ushort* GetUInt16Pointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (ushort*)@object.GetPointer(index);
+        return (ushort*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe int GetInt32<TObject>(this TObject @object, int index)
+    public static unsafe int GetInt32<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetInt32Pointer(index);
+        return *@object.GetInt32Pointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetInt32<TObject>(this TObject @object, int index, int value)
+    public static unsafe void SetInt32<TObject>(this TObject @object, int offset, int value)
         where TObject : IObject
     {
-        *@object.GetInt32Pointer(index) = value;
+        *@object.GetInt32Pointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe int* GetInt32Pointer<TObject>(this TObject @object, int index)
+    internal static unsafe int* GetInt32Pointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (int*)@object.GetPointer(index);
+        return (int*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe uint GetUInt32<TObject>(this TObject @object, int index)
+    public static unsafe uint GetUInt32<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetUInt32Pointer(index);
+        return *@object.GetUInt32Pointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetUInt32<TObject>(this TObject @object, int index, uint value)
+    public static unsafe void SetUInt32<TObject>(this TObject @object, int offset, uint value)
         where TObject : IObject
     {
-        *@object.GetUInt32Pointer(index) = value;
+        *@object.GetUInt32Pointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe uint* GetUInt32Pointer<TObject>(this TObject @object, int index)
+    internal static unsafe uint* GetUInt32Pointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (uint*)@object.GetPointer(index);
+        return (uint*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe long GetInt64<TObject>(this TObject @object, int index)
+    public static unsafe long GetInt64<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetInt64Pointer(index);
+        return *@object.GetInt64Pointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetInt64<TObject>(this TObject @object, int index, long value)
+    public static unsafe void SetInt64<TObject>(this TObject @object, int offset, long value)
         where TObject : IObject
     {
-        *@object.GetInt64Pointer(index) = value;
+        *@object.GetInt64Pointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe long* GetInt64Pointer<TObject>(this TObject @object, int index)
+    internal static unsafe long* GetInt64Pointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (long*)@object.GetPointer(index);
+        return (long*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe bool GetBoolean<TObject>(this TObject @object, int index)
+    public static unsafe bool GetBoolean<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetBooleanPointer(index);
+        return *@object.GetBooleanPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetBoolean<TObject>(this TObject @object, int index, bool value)
+    public static unsafe void SetBoolean<TObject>(this TObject @object, int offset, bool value)
         where TObject : IObject
     {
-        *@object.GetBooleanPointer(index) = value;
+        *@object.GetBooleanPointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe bool* GetBooleanPointer<TObject>(this TObject @object, int index)
+    internal static unsafe bool* GetBooleanPointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (bool*)@object.GetPointer(index);
+        return (bool*)@object.GetPointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe byte GetByte<TObject>(this TObject @object, int index)
+    public static unsafe byte GetByte<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return *@object.GetBytePointer(index);
+        return *@object.GetBytePointer(offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void SetByte<TObject>(this TObject @object, int index, byte value)
+    public static unsafe void SetByte<TObject>(this TObject @object, int offset, byte value)
         where TObject : IObject
     {
-        *@object.GetBytePointer(index) = value;
+        *@object.GetBytePointer(offset) = value;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe byte* GetBytePointer<TObject>(this TObject @object, int index)
+    internal static unsafe byte* GetBytePointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        return (byte*)@object.GetPointer(index);
+        return @object.Pointer.Value + offset;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static unsafe void* GetPointer<TObject>(this TObject @object, int index)
+    internal static unsafe void* GetPointer<TObject>(this TObject @object, int offset)
         where TObject : IObject
     {
-        var pool = @object.GetPool();
-
-        return pool.Pointer + @object.GetOffset(index);
+        return @object.Pointer.Value + offset;
     }
 }

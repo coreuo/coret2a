@@ -29,7 +29,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetArray<{Object.Name}, {Item.Name}>({Property.Index}, {Size});";
+                return $"get => this.GetArray<{Object.Name}, {Item.Name}>({ResolveOffset(Property)}, {Size});";
             }
 
             public override string ResolveSize()

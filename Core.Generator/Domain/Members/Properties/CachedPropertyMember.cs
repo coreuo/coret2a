@@ -29,12 +29,12 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetValue(Pool.Save.{TypeName}Store, {Property.Index});";
+                return $"get => this.GetValue(Pool.Save.{TypeName}Store, {ResolveOffset(Property)});";
             }
 
             public override string ResolveSetter()
             {
-                return $"set => this.SetValue(Pool.Save.{TypeName}Store, {Property.Index}, value);";
+                return $"set => this.SetValue(Pool.Save.{TypeName}Store, {ResolveOffset(Property)}, value);";
             }
 
             public override string ResolveSize()

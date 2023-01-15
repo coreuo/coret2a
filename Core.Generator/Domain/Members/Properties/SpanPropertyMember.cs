@@ -100,7 +100,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetSpan<{Object.Name}, {GenericType}>({Property.Index}, {Size});";
+                return $"get => this.GetSpan<{Object.Name}, {GenericType}>({ResolveOffset(Property)}, {Size});";
             }
 
             public override string ResolveSize()

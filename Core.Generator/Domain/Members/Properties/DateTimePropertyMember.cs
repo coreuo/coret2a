@@ -29,12 +29,12 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => new DateTime(this.GetInt64({Property.Index}));";
+                return $"get => new DateTime(this.GetInt64({ResolveOffset(Property)}));";
             }
 
             public override string ResolveSetter()
             {
-                return $"set => this.SetInt64({Property.Index}, value.Ticks);";
+                return $"set => this.SetInt64({ResolveOffset(Property)}, value.Ticks);";
             }
 
             public override string ResolveType()

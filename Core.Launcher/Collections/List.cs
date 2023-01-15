@@ -30,16 +30,16 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
 
     internal int Owner { get; }
 
-    internal int Next => Owner + 1;
+    internal int Next => Owner + 4;
 
-    internal int Previous => Next + 1;
+    internal int Previous => Next + 4;
 
-    internal List(int parentId, int *count, IPool<TChild> children, int childrenIndex)
+    internal List(int parentId, int *count, IPool<TChild> children, int childrenOffset)
     {
         _parentId = parentId;
         _count = count;
         Pool = children;
-        Owner = childrenIndex;
+        Owner = childrenOffset;
     }
 
     public IEnumerator<TChild> GetEnumerator()

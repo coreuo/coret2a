@@ -71,14 +71,14 @@ namespace Core.Generator.Domain.Members.Properties
             {
                 var property = GetProperty();
 
-                return $"get => this.GetValue(Pool.Save.{Type}Store, {property.Index});";
+                return $"get => this.GetValue(Pool.Save.{Type}Store, {ResolveOffset(property)});";
             }
 
             public override string ResolveSetter()
             {
                 var property = GetProperty();
 
-                return $"set => this.SetValue(Pool.Save.{Type}Store, {property.Index}, value);";
+                return $"set => this.SetValue(Pool.Save.{Type}Store, {ResolveOffset(property)}, value);";
             }
 
             private Property GetProperty()

@@ -33,7 +33,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetConcurrentQueue({TopProperty.Index}, Pool.Save.{Item.Name}Store, {NextProperty.Index});";
+                return $"get => this.GetConcurrentQueue({ResolveOffset(TopProperty)}, Pool.Save.{Item.Name}Store, {ResolveOffset(NextProperty)});";
             }
 
             public override string ResolveSize()
