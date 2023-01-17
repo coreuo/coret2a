@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Core.Generator.Extensions;
@@ -16,28 +15,19 @@ namespace Core.Generator.Domain
             Synchronized = dictionary.Keys.Any(i => i.GetAttributes().Any(a => a.IsSynchronizedAttribute()));
         }
 
-        protected override IEnumerable<Property> SortProperties(IEnumerable<Property> properties)
+        public override IEnumerable<Property> MutateProperties(IEnumerable<Property> properties)
         {
             return new[] { new Property(this, null, "Free", "nameof(Free)", "sizeof(int)") }
-                .Concat(base.SortProperties(properties));
+                .Concat(base.MutateProperties(properties));
         }
 
         public override string GetCode()
         {
-            var inheritance = GetInheritance();
+            return $@"{GetNamespaceCode()}
 
-            return $@"using Core.Launcher;
-using Core.Launcher.Domain;
-using Core.Launcher.Extensions;
-using Core.Abstract.Domain;
-
-namespace Launcher.Domain;
-
-public struct {Name} : IEntity<Pool<Save, {Name}>, {Name}>,
-    {string.Join(@",
-    ", inheritance)}
+public struct {Name} : IEntity<Save, {Name}>{GetInheritanceCode()}
 {{  
-    public Pool<Save, {Name}> Pool {{ get; }}
+    public Save Save {{ get; }}
 
     public int Id {{ get; set; }}
 
@@ -47,52 +37,23 @@ public struct {Name} : IEntity<Pool<Save, {Name}>, {Name}>,
     {{
         get => this.GetInt32(FreeOffset);
         set => this.SetInt32(FreeOffset, value);
-    }}
-    {string.Join(Environment.NewLine, PropertyMembers.Select(m => $@"
-    public {m.ResolveType()} {m.Name}
-    {{
-        {m.ResolveGetter()}
-        {m.ResolveSetter()}
-    }}"))}
+    }}{GetPropertiesCode()}
 
-    public {Name}(Pool<Save, {Name}> pool, int id)
+    public {Name}(Save save, int id, Pointer pointer)
     {{
-        Pool = pool;
+        Save = save;
         Id = id;
-        Pointer = pool.Pointer.Offset(Schema.Offset + (Id - 1) * {Name}.Size);
-    }}
-    {string.Join(Environment.NewLine, MethodMembers.Select(m => $@"
-    public {m.ResolveDeclaration()}
-    {{{string.Join(Environment.NewLine, m.Calls.OrderBy(p => p.Priority).Select(c => $@"
-        {(c.Return ? "return " : string.Empty)}{c.Name}({c.Parameters});"))}
-    }}"))}
-
-    public Pool GetPool() => Pool;
-
-    public IStore<{Name}> GetStore() => Pool;
-    {string.Join(string.Empty, Properties.Select(p => $@"
-    public const int {p.CodeName}Offset = {p.Offset};"))}
-
-    public static Property[] GetProperties()
-    {{
-        return new Property[]
-        {{{string.Join(",", Properties.Select(p => $@"
-            new({p.Name}, {p.Size}, {p.CodeName}Offset)"))}
-        }};
-    }}
-
-    public const int Size = {Size};
-
-    public static int GetSize() => Size;
+        Pointer = pointer;
+    }}{GetMethodsCode()}{GetMetaCode()}
 
     public static int GetPoolCapacity()
     {{
         return 10000;
     }}
 
-    public static {Name} Create(Pool<Save, {Name}> pool, int id)
+    public static {Name} Create(Save save, int id, Pointer pointer)
     {{
-        return new {Name}(pool, id);
+        return new {Name}(save, id, pointer);
     }}
 
     public override string ToString()

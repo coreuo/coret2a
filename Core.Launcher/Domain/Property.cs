@@ -4,15 +4,29 @@ public class Property
 {
     public int Offset { get; set; }
 
-    public string Name { get; }
-
     public int Size { get; }
 
-    public Property(string name, int size, int offset = -1)
+    public string Name { get; }
+
+    public Property(int offset, int size, string name)
     {
-        Name = name;
-        Size = size;
         Offset = offset;
+        Size = size;
+        Name = name;
+    }
+
+    public Property(int offset, int size, string @object, string subject, string property)
+    {
+        Offset = offset;
+        Size = size;
+        Name = $"{@object}.{subject}.{property}";
+    }
+
+    public Property(int offset, int size, string subject, string property)
+    {
+        Offset = offset;
+        Size = size;
+        Name = $"{subject}.{property}";
     }
 
     public override string ToString()

@@ -2,11 +2,11 @@
 
 namespace Core.Launcher.Domain;
 
-public interface IElement<TElement> : IElement
-    where TElement : IElement<TElement>
+public interface IElement<TSave, TElement> : IElement, IObject<TSave>
+    where TElement : IElement<TSave, TElement>
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static abstract TElement Create(Pool pool, int elementId, int entityId, int entityIndex);
+    public static abstract TElement Create(TSave save, Pointer pointer);
 }
 
 public interface IElement : IObject

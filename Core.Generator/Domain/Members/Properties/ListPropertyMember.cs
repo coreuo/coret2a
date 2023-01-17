@@ -21,17 +21,17 @@ namespace Core.Generator.Domain.Members.Properties
 
         public class ListPropertyMerge : EnumerablePropertyMerge<ListPropertyMember>
         {
-            public Property OwnerProperty { get; private set; }
-
-            public Property NextProperty { get; private set; }
-
-            public Property PreviousProperty { get; private set; }
+            public Property BottomProperty { get; private set; }
 
             public Property CountProperty { get; private set; }
 
             public Property TopProperty { get; private set; }
 
-            public Property BottomProperty { get; private set; }
+            public Property NextProperty { get; private set; }
+
+            public Property OwnerProperty { get; private set; }
+
+            public Property PreviousProperty { get; private set; }
 
             public ListPropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<ListPropertyMember> members) : base(@object, name, type, typeName, members)
             {
@@ -39,7 +39,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetList({ResolveOffset(CountProperty)}, Pool.Save.{Item.Name}Store, {ResolveOffset(OwnerProperty)});";
+                return $"get => this.GetList({ResolveOffset(BottomProperty)}, Save.{Item.Name}Store, {ResolveOffset(NextProperty)});";
             }
 
             public override string ResolveSize()
@@ -47,24 +47,34 @@ namespace Core.Generator.Domain.Members.Properties
                 return "sizeof(int)";
             }
 
-            public override string ResolveName(string name)
-            {
-                return $"\"{name}\"";
-            }
-
             public override IEnumerable<Property> ResolveProperties()
             {
-                yield return OwnerProperty = ResolveProperty(Item, $"{Object.Name}.{Name}.1.Owner");
+                yield return BottomProperty = ResolveProperty(Object, "Bottom");
 
-                yield return NextProperty = ResolveProperty(Item, $"{Object.Name}.{Name}.2.Next");
+                yield return CountProperty = ResolveProperty(Object, "Count");
 
-                yield return PreviousProperty = ResolveProperty(Item, $"{Object.Name}.{Name}.3.Previous");
+                yield return TopProperty = ResolveProperty(Object, "Top");
 
-                yield return CountProperty = ResolveProperty(Object, $"{Name}.1.Count");
+                yield return NextProperty = ResolveFullProperty(Item, "Next");
 
-                yield return TopProperty = ResolveProperty(Object, $"{Name}.2.Top");
+                yield return OwnerProperty = ResolveFullProperty(Item,  "Owner");
 
-                yield return BottomProperty = ResolveProperty(Object, $"{Name}.3.Bottom");
+                yield return PreviousProperty = ResolveFullProperty(Item,  "Previous");
+            }
+
+            protected virtual Property ResolveFullProperty(Object @object, string name)
+            {
+                return ResolveFullProperty(@object, name, ResolveName(name));
+            }
+
+            protected virtual Property ResolveProperty(Object @object, string name)
+            {
+                return ResolveProperty(@object, name, ResolveName(name));
+            }
+
+            protected virtual string ResolveName(string name)
+            {
+                return $"List<{Item.Name}>.{name}";
             }
         }
     }

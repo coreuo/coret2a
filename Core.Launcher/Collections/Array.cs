@@ -3,25 +3,22 @@ using System.Collections;
 
 namespace Core.Launcher.Collections;
 
-public readonly struct Array<TElement> : IReadOnlyList<TElement>
-    where TElement : IElement<TElement>
+public readonly struct Array<TSave, TElement> : IReadOnlyList<TElement>
+    where TElement : IElement<TSave, TElement>
 {
+    public TSave Save { get; }
+
+    public Pointer Pointer { get; }
+
     public int Count { get; }
 
-    public Pool Pool { get; }
+    public TElement this[int index] => index < Count ? TElement.Create(Save, Pointer.Offset(index * TElement.GetSize())) : throw new IndexOutOfRangeException();
 
-    public int Id { get; }
-
-    public int Index { get; }
-
-    public TElement this[int index] => TElement.Create(Pool, index + 1, Id, Index);
-
-    public Array(int count, Pool pool, int id, int index)
+    public Array(TSave save, Pointer pointer, int count)
     {
+        Save = save;
+        Pointer = pointer;
         Count = count;
-        Pool = pool;
-        Id = id;
-        Index = index;
     }
 
     public IEnumerator<TElement> GetEnumerator()
@@ -36,11 +33,11 @@ public readonly struct Array<TElement> : IReadOnlyList<TElement>
 
     public struct Enumerator : IEnumerator<TElement>
     {
-        private readonly Array<TElement> _array;
+        private readonly Array<TSave, TElement> _array;
 
         private int _next = -1;
 
-        public Enumerator(Array<TElement> array)
+        public Enumerator(Array<TSave, TElement> array)
         {
             _array = array;
         }

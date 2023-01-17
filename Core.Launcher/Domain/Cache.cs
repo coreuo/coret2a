@@ -23,12 +23,12 @@ public class Cache<TValue> : ICache<TValue>
         _collection.Remove(value);
     }
 
-    public int GetId(TValue value)
+    public int Get(TValue value)
     {
         return _dictionary[value] + 1;
     }
 
-    public TValue GetValue(int id)
+    public TValue Get(int id)
     {
         if (id == 0) return default!;
 

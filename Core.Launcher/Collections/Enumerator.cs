@@ -8,7 +8,7 @@ namespace Core.Launcher.Collections;
 public struct Enumerator<TEntity> : IEnumerator<TEntity>
     where TEntity : IEntity
 {
-    private readonly IPool<TEntity> _pool;
+    private readonly IStore<TEntity> _store;
 
     private readonly int _initial;
 
@@ -18,13 +18,13 @@ public struct Enumerator<TEntity> : IEnumerator<TEntity>
 
     private int _future = -1;
 
-    public TEntity Current => _pool.GetValue(_current);
+    public TEntity Current => _store.Get(_current);
 
     object IEnumerator.Current => Current;
 
-    public Enumerator(IPool<TEntity> pool, int initial, int next)
+    public Enumerator(IStore<TEntity> store, int initial, int next)
     {
-        _pool = pool;
+        _store = store;
         _next = next;
         _initial = initial;
         _future = initial;

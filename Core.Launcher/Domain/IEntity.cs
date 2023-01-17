@@ -2,13 +2,11 @@
 
 namespace Core.Launcher.Domain;
 
-public interface IEntity<TPool, TEntity> : IEntity<TEntity>
-    where TEntity : IEntity<TPool, TEntity>
+public interface IEntity<TSave, TEntity> : IEntity<TEntity>, IObject<TSave>
+    where TEntity : IEntity<TSave, TEntity>
 {
-    public TPool Pool { get; }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static abstract TEntity Create(TPool pool, int id);
+    public static abstract TEntity Create(TSave save, int id, Pointer pointer);
 }
 
 public interface IEntity<TEntity> : IEntity
@@ -16,12 +14,12 @@ public interface IEntity<TEntity> : IEntity
 {
     public static abstract Property[] GetProperties();
 
-    public static abstract int GetSize();
-
     public static abstract int GetPoolCapacity();
 }
 
 public interface IEntity : IObject
 {
+    int Id { get; }
+
     public int Free { get; set; }
 }

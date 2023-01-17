@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using Core.Generator.Domain.Members.Methods;
+﻿using Core.Generator.Domain.Members.Methods;
 using Core.Generator.Domain.Members.Properties;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
+using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
 namespace Core.Generator.Domain
 {
@@ -80,10 +80,13 @@ namespace Core.Generator.Domain
             }
         }
 
-        public void AssignProperties(IEnumerable<Property> properties)
+        public virtual IEnumerable<Property> MutateProperties(IEnumerable<Property> properties)
         {
-            Properties = SortProperties(properties).ToImmutableList();
+            return properties.OrderBy(p => p.Identifier);
+        }
 
+        public void AssignMetaData()
+        {
             var index = 0;
 
             Property last = null;
@@ -100,18 +103,67 @@ namespace Core.Generator.Domain
             Size = last == null ? "0" : $"{last.CodeName}Offset + {last.Size}";
         }
 
-        protected virtual IEnumerable<Property> SortProperties(IEnumerable<Property> properties)
-        {
-            return properties.OrderBy(p => p.Identifier);
-        }
-
         public abstract string GetCode();
 
-        protected ImmutableList<string> GetInheritance()
+        protected virtual string GetNamespaceCode()
         {
-            return Dictionary
-                .Select(i => ((INamedTypeSymbol)i.Key).ResolveTypeParameters(p => i.Value[p]))
-                .ToImmutableList();
+            return $@"using System;
+using Core.Launcher;
+using Core.Launcher.Domain;
+using Core.Launcher.Extensions;
+using Core.Launcher.Collections;
+using Core.Abstract.Domain;
+
+namespace Launcher.Domain;";
+        }
+
+        protected virtual string GetInheritanceCode()
+        {
+            var inheritance = Dictionary
+                .Select(i => ((INamedTypeSymbol)i.Key).ResolveTypeParameters(p => i.Value[p]));
+
+            return $@",
+    {string.Join(@",
+    ", inheritance)}";
+        }
+
+        protected virtual string GetPropertiesCode()
+        {
+            return !PropertyMembers.Any() ? string.Empty : $@"
+{string.Join(Environment.NewLine, PropertyMembers.Select(m => $@"
+    public {m.ResolveType()} {m.Name}
+    {{
+        {m.ResolveGetter()}{(m.ResolveSetter() is var setter && string.IsNullOrEmpty(setter) ? string.Empty : $@"
+        {m.ResolveSetter()}")}
+    }}"))}";
+        }
+
+        protected virtual string GetMethodsCode()
+        {
+            return !MethodMembers.Any() ? string.Empty : $@"
+{string.Join(Environment.NewLine, MethodMembers.Select(m => $@"
+    public {m.ResolveDeclaration()}
+    {{{string.Join(Environment.NewLine, m.Calls.OrderBy(p => p.Priority).Select(c => $@"
+        {(c.Return ? "return " : string.Empty)}{c.Name}({c.Parameters});"))}
+    }}"))}";
+        }
+
+        protected virtual string GetMetaCode()
+        {
+            return $@"
+{string.Join(string.Empty, Properties.Select(p => $@"
+    public const int {p.CodeName}Offset = {p.Offset};"))}
+
+    private static Property[] _properties = new Property[]
+    {{{string.Join(",", Properties.Select(p => $@"
+        new({p.CodeName}Offset, {p.Size}, {p.Name})"))}
+    }};
+
+    public static Property[] GetProperties() => _properties;
+
+    public const int Size = {Size};
+
+    public static int GetSize() => Size;";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Core.Abstract.Attributes;
+﻿using System.Threading.Tasks;
+using Core.Abstract.Attributes;
 using Launcher;
 using Launcher.Domain;
 
@@ -79,11 +80,15 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     //"a".CopyTo(character.Password);
 
+    var index = 0;
+
     foreach (var item in character.Skills)
     {
         var skill = item;
 
-        skill.Value = (ushort)(item.Id * 0xA);
+        skill.Value = (ushort)(index * 0xA);
+
+        index++;
     }
 
     shardAccount.Characters.Add(character);

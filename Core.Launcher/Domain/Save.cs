@@ -18,7 +18,7 @@ public abstract class Save<TSave> : IDisposable
     }
 
     protected Pool<TSave, TEntity> ReadPool<TEntity>(TSave save, bool isSynchronized = false)
-        where TEntity : IEntity<Pool<TSave, TEntity>, TEntity>
+        where TEntity : IEntity<TSave, TEntity>
     {
         var poolPath = GetPoolPath<TEntity>();
 

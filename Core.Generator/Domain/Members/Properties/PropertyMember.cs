@@ -61,7 +61,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             if (ArrayPropertyMember.Is(original)) return new ArrayPropertyMember(@object, @interface, original);
 
-            if (ObjectPropertyMember.Is(original)) return new ObjectPropertyMember(@object, @interface, original);
+            if (StoredPropertyMember.Is(original)) return new StoredPropertyMember(@object, @interface, original);
 
             if (CachedPropertyMember.Is(original)) return new CachedPropertyMember(@object, @interface, original);
 
@@ -117,11 +117,6 @@ namespace Core.Generator.Domain.Members.Properties
                 return $"sizeof({Type})";
             }
 
-            public virtual string ResolveName(string name)
-            {
-                return $"nameof({name})";
-            }
-
             public abstract string ResolveGetter();
 
             public virtual string ResolveSetter()
@@ -136,12 +131,17 @@ namespace Core.Generator.Domain.Members.Properties
 
             protected Property ResolveProperty()
             {
-                return ResolveProperty(Object, Name);
+                return new Property(Object, this, Name, $"nameof({Name})", ResolveSize());
             }
 
-            protected virtual Property ResolveProperty(Object @object, string identifier)
+            protected virtual Property ResolveProperty(Object @object, string identifier, string name)
             {
-                return new Property(@object, this, identifier, ResolveName(identifier), ResolveSize());
+                return new Property(@object, this, $"{Name}.{identifier}", $"nameof({Name}), nameof({name})", ResolveSize());
+            }
+
+            protected virtual Property ResolveFullProperty(Object @object, string identifier, string name)
+            {
+                return new Property(@object, this, $"{Object.Name}.{Name}.{identifier}", $"nameof({Object.Name}), nameof({Object.Name}.{Name}), nameof({name})", ResolveSize());
             }
 
             public virtual IEnumerable<Property> ResolveProperties()

@@ -2,7 +2,7 @@
 
 public interface IStore<TValue>
 {
-    int GetId(TValue value);
+    int Get(TValue value);
 
-    TValue GetValue(int id);
+    TValue Get(int id);
 }

@@ -10,19 +10,25 @@ namespace Core.Launcher.Collections;
 public readonly unsafe struct ConcurrentQueue<TEntity> : IProducerConsumerCollection<TEntity>
     where TEntity : IEntity
 {
-    internal int* Top { get; }
+    public const int Bottom = 0;
 
-    internal int* Bottom => Top + 1;
+    public const int Top = 1;
 
-    internal IPool<TEntity> Pool { get; }
+    public const int Next = 0;
 
-    internal int Next { get; }
+    internal int* BottomPointer { get; }
 
-    public ConcurrentQueue(int* top, IPool<TEntity> pool, int next)
+    internal int* TopPointer => BottomPointer + Top;
+
+    internal IStore<TEntity> Store { get; }
+
+    internal int NextOffset { get; }
+
+    public ConcurrentQueue(int* parentPointer, IStore<TEntity> store, int childrenOffset)
     {
-        Top = top;
-        Pool = pool;
-        Next = next;
+        BottomPointer = parentPointer;
+        Store = store;
+        NextOffset = childrenOffset;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -30,17 +36,17 @@ public readonly unsafe struct ConcurrentQueue<TEntity> : IProducerConsumerCollec
     {
         do
         {
-            var top = Volatile.Read(ref *Top);
+            var top = Volatile.Read(ref *TopPointer);
 
             if (top == -1) continue;
 
-            entity = Pool.GetValue(top);
+            entity = Store.Get(top);
 
             if (top == 0) return false;
 
-            if (Interlocked.CompareExchange(ref *Top, entity.GetInt32(Next), top) != top) continue;
+            if (Interlocked.CompareExchange(ref *TopPointer, entity.GetInt32(NextOffset), top) != top) continue;
 
-            entity.SetInt32(Next, 0);
+            entity.SetInt32(NextOffset, 0);
 
             return true;
 
@@ -52,24 +58,24 @@ public readonly unsafe struct ConcurrentQueue<TEntity> : IProducerConsumerCollec
     {
         do
         {
-            var top = Volatile.Read(ref *Top);
+            var top = Volatile.Read(ref *TopPointer);
 
-            if (top == -1 || Interlocked.CompareExchange(ref *Top, -1, top) != top) continue;
+            if (top == -1 || Interlocked.CompareExchange(ref *TopPointer, -1, top) != top) continue;
 
             if (top == 0)
             {
                 top = entity.Id;
             }
-            else if (*Bottom > 0)
+            else if (*BottomPointer > 0)
             {
-                var existing = Pool.GetValue(*Bottom);
+                var existing = Store.Get(*BottomPointer);
 
-                existing.SetInt32(Next, entity.Id);
+                existing.SetInt32(NextOffset, entity.Id);
             }
 
-            *Bottom = entity.Id;
+            *BottomPointer = entity.Id;
 
-            Volatile.Write(ref *Top, top);
+            Volatile.Write(ref *TopPointer, top);
 
             return;
 

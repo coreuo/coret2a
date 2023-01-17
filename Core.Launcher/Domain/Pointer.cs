@@ -1,4 +1,6 @@
-﻿namespace Core.Launcher.Domain
+﻿using System.Runtime.CompilerServices;
+
+namespace Core.Launcher.Domain
 {
     public readonly struct Pointer
     {
@@ -9,6 +11,7 @@
             Value = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Pointer Offset(int offset)
         {
             unsafe

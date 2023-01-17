@@ -27,20 +27,20 @@ namespace Core.Generator.Extensions
 
             if (@interface.IsProducerConsumerCollection())
             {
-                if (parameter.Name.EndsWith("ConcurrentQueue")) return $"Core.Launcher.Collections.ConcurrentQueue<{resolved}>";
-                else if (parameter.Name.EndsWith("ConcurrentStack")) return $"Core.Launcher.Collections.ConcurrentStack<{resolved}>";
-                else if (parameter.Name.EndsWith("Queue")) return $"Core.Launcher.Collections.Queue<{resolved}>";
-                else if (parameter.Name.EndsWith("Stack")) return $"Core.Launcher.Collections.Stack<{resolved}>";
+                if (parameter.Name.EndsWith("ConcurrentQueue")) return $"ConcurrentQueue<{resolved}>";
+                else if (parameter.Name.EndsWith("ConcurrentStack")) return $"ConcurrentStack<{resolved}>";
+                else if (parameter.Name.EndsWith("Queue")) return $"Queue<{resolved}>";
+                else if (parameter.Name.EndsWith("Stack")) return $"Stack<{resolved}>";
             }
 
             if (@interface.IsCollection())
             {
-                if (parameter.Name.EndsWith("Collection")) return $"Core.Launcher.Collections.List<{resolved}>";
+                if (parameter.Name.EndsWith("Collection")) return $"List<{resolved}>";
             }
 
             if (@interface.IsArray())
             {
-                if (parameter.Name.EndsWith("Array")) return $"Core.Launcher.Collections.Array<{resolved}>";
+                if (parameter.Name.EndsWith("Array")) return $"Array<Save, {resolved}>";
             }
 
             throw new InvalidOperationException("Invalid entity or element parameter.");

@@ -25,7 +25,7 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 #if DEBUG
     string Identity { get; }
 #endif
-    [Link("LoginServer.Shards.1.Owner")]
+    [Link("LoginServer.Shards.Owner")]
     TLogin Login { get; }
 
     void PacketPreLogin(TState state);

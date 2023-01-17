@@ -30,7 +30,7 @@ namespace Core.Generator.Domain.Members.Methods
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, 0, $"Pool.Save.{Parameters.Single().type}Store.Release", Parameters.Single().name);
+                yield return new Call(Object, this, 0, $"Save.{Parameters.Single().type}Store.Release", Parameters.Single().name);
             }
         }
     }

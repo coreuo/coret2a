@@ -10,41 +10,51 @@ namespace Core.Launcher.Collections;
 public readonly unsafe struct List<TChild> : ICollection<TChild>
     where TChild : IEntity
 {
-    private readonly int _parentId;
-
-    private readonly int* _count;
+    public const int Bottom = 0;
 
     public int Count
     {
-        get => *_count;
-        set => *_count = value;
+        get => *CountPointer;
+        set => *CountPointer = value;
     }
+
+    public const int Top = 2;
+
+    public const int Next = 0;
+
+    public const int Owner = 4;
+
+    public const int Previous = 8;
+
+    internal int Parent { get; }
+
+    internal int* BottomPointer { get; }
+
+    internal int* CountPointer => BottomPointer + 1;
+
+    internal int* TopPointer => BottomPointer + Top;
+
+    internal IStore<TChild> Store { get; }
+
+    internal int NextOffset { get; }
+
+    internal int OwnerOffset => NextOffset + Owner;
+
+    internal int PreviousOffset => NextOffset + Previous;
 
     public bool IsReadOnly => false;
 
-    internal int* Top => _count + 1;
-
-    internal int* Bottom => Top + 1;
-
-    internal IPool<TChild> Pool { get; }
-
-    internal int Owner { get; }
-
-    internal int Next => Owner + 4;
-
-    internal int Previous => Next + 4;
-
-    internal List(int parentId, int *count, IPool<TChild> children, int childrenOffset)
+    internal List(int parent, int *parentPointer, IStore<TChild> children, int childrenOffset)
     {
-        _parentId = parentId;
-        _count = count;
-        Pool = children;
-        Owner = childrenOffset;
+        Parent = parent;
+        BottomPointer = parentPointer;
+        Store = children;
+        NextOffset = childrenOffset;
     }
 
     public IEnumerator<TChild> GetEnumerator()
     {
-        return new Enumerator<TChild>(Pool, *Top, Next);
+        return new Enumerator<TChild>(Store, *TopPointer, NextOffset);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -57,22 +67,22 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
     {
         if (Contains(entity)) return;
 
-        if (*Top == 0)
+        if (*TopPointer == 0)
         {
-            *Top = entity.Id;
+            *TopPointer = entity.Id;
         }
-        else if (*Bottom > 0)
+        else if (*BottomPointer > 0)
         {
-            var existing = Pool.GetValue(*Bottom);
+            var existing = Store.Get(*BottomPointer);
 
-            existing.SetInt32(Next, entity.Id);
+            existing.SetInt32(NextOffset, entity.Id);
 
-            entity.SetInt32(Previous, existing.Id);
+            entity.SetInt32(PreviousOffset, existing.Id);
         }
 
-        *Bottom = entity.Id;
+        *BottomPointer = entity.Id;
 
-        entity.SetInt32(Owner, _parentId);
+        entity.SetInt32(OwnerOffset, Parent);
 
         Count++;
     }
@@ -91,7 +101,7 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
     {
         if (Is.Default(child)) return false;
 
-        return _parentId == child.GetInt32(Owner);
+        return Parent == child.GetInt32(OwnerOffset);
     }
 
     public void CopyTo(TChild[] array, int arrayIndex)
@@ -115,19 +125,19 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
 
         var next = ExchangeNext(child, 0);
 
-        if (previous.Id == 0) *Top = 0;
+        if (previous.Id == 0) *TopPointer = 0;
 
-        else if(next.Id > 0) previous.SetInt32(Next, next.Id);
+        else if(next.Id > 0) previous.SetInt32(NextOffset, next.Id);
 
-        else previous.SetInt32(Next, 0);
+        else previous.SetInt32(NextOffset, 0);
 
-        if (next.Id == 0) *Bottom = 0;
+        if (next.Id == 0) *BottomPointer = 0;
 
-        else if(previous.Id > 0) next.SetInt32(Previous, previous.Id);
+        else if(previous.Id > 0) next.SetInt32(PreviousOffset, previous.Id);
 
-        else next.SetInt32(Previous, 0);
+        else next.SetInt32(PreviousOffset, 0);
 
-        child.SetInt32(Owner, 0);
+        child.SetInt32(OwnerOffset, 0);
 
         Count--;
 
@@ -137,13 +147,13 @@ public readonly unsafe struct List<TChild> : ICollection<TChild>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TChild ExchangePrevious(TChild child, int value)
     {
-        return Pool.GetValue(child.ExchangeInt32(Previous, value));
+        return Store.Get(child.ExchangeInt32(PreviousOffset, value));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private TChild ExchangeNext(TChild child, int value)
     {
-        return Pool.GetValue(child.ExchangeInt32(Next, value));
+        return Store.Get(child.ExchangeInt32(NextOffset, value));
     }
 
     /*public int IndexOf(TChild item)

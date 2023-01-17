@@ -26,7 +26,7 @@ public readonly unsafe struct Stack<TEntity> : IProducerConsumerCollection<TEnti
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPop(out TEntity entity)
     {
-        entity = Pool.GetValue(*Top);
+        entity = Pool.Get(*Top);
 
         if (*Top == 0) return false;
 

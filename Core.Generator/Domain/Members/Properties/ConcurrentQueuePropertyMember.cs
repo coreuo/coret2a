@@ -21,11 +21,11 @@ namespace Core.Generator.Domain.Members.Properties
 
         public class ConcurrentQueuePropertyMerge : EnumerablePropertyMerge<ConcurrentQueuePropertyMember>
         {
-            public Property NextProperty { get; private set; }
+            public Property BottomProperty { get; private set; }
 
             public Property TopProperty { get; private set; }
 
-            public Property BottomProperty { get; private set; }
+            public Property NextProperty { get; private set; }
 
             public ConcurrentQueuePropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<ConcurrentQueuePropertyMember> members) : base(@object, name, type, typeName, members)
             {
@@ -33,7 +33,7 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetConcurrentQueue({ResolveOffset(TopProperty)}, Pool.Save.{Item.Name}Store, {ResolveOffset(NextProperty)});";
+                return $"get => this.GetConcurrentQueue({ResolveOffset(BottomProperty)}, Save.{Item.Name}Store, {ResolveOffset(NextProperty)});";
             }
 
             public override string ResolveSize()
@@ -41,18 +41,28 @@ namespace Core.Generator.Domain.Members.Properties
                 return "sizeof(int)";
             }
 
-            public override string ResolveName(string name)
-            {
-                return $"\"{name}\"";
-            }
-
             public override IEnumerable<Property> ResolveProperties()
             {
-                yield return NextProperty = ResolveProperty(Item, $"{Object.Name}.{Name}.1.Next");
+                yield return BottomProperty = ResolveProperty(Object, "Bottom");
 
-                yield return TopProperty = ResolveProperty(Object, $"{Name}.1.Top");
+                yield return TopProperty = ResolveProperty(Object, "Top");
 
-                yield return BottomProperty = ResolveProperty(Object, $"{Name}.2.Bottom");
+                yield return NextProperty = ResolveFullProperty(Item, "Next");
+            }
+
+            protected virtual Property ResolveFullProperty(Object @object, string name)
+            {
+                return ResolveFullProperty(@object, name, ResolveName(name));
+            }
+
+            protected virtual Property ResolveProperty(Object @object, string name)
+            {
+                return ResolveProperty(@object, name, ResolveName(name));
+            }
+
+            protected virtual string ResolveName(string name)
+            {
+                return $"ConcurrentQueue<{Item.Name}>.{name}";
             }
         }
     }

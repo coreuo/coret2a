@@ -30,7 +30,7 @@ public readonly unsafe struct ConcurrentStack<TEntity> : IProducerConsumerCollec
         {
             var top = Volatile.Read(ref *Top);
 
-            entity = Pool.GetValue(top);
+            entity = Pool.Get(top);
 
             if (top == 0) return false;
 

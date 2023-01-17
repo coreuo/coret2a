@@ -7,7 +7,7 @@ namespace Core.Launcher.Domain;
 
 public class Pool<TSave, TEntity> : Pool<TEntity>, IPool<TEntity>/*, IReadOnlyList<TEntity>, IProducerConsumerCollection<TEntity>*/
     where TSave : Save<TSave>, ISave<TSave>
-    where TEntity : IEntity<Pool<TSave, TEntity>, TEntity>
+    where TEntity : IEntity<TSave, TEntity>
 {
     public TSave Save { get; }
 
@@ -31,19 +31,19 @@ public class Pool<TSave, TEntity> : Pool<TEntity>, IPool<TEntity>/*, IReadOnlyLi
 
                 if (free == 0) break;
 
-                var entity = TEntity.Create(this, free);
+                var entity = Create(free);
 
                 if (Interlocked.CompareExchange(ref *Free, entity.Free, free) == free) return entity;
 
             } while (true);
 
-            return TEntity.Create(this, Interlocked.Increment(ref Length));
+            return Create(Interlocked.Increment(ref Length));
         }
         else
         {
-            if (*Free == 0) return TEntity.Create(this, ++Length);
+            if (*Free == 0) return Create(++Length);
 
-            var entity = TEntity.Create(this, *Free);
+            var entity = Create(*Free);
 
             *Free = entity.Free;
 
@@ -52,15 +52,27 @@ public class Pool<TSave, TEntity> : Pool<TEntity>, IPool<TEntity>/*, IReadOnlyLi
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public int GetId(TEntity entity)
+    public int Get(TEntity entity)
     {
         return entity.Id;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public TEntity GetValue(int id)
+    public TEntity Get(int id)
     {
-        return id == 0 ? default! : TEntity.Create(this, id);
+        return id == 0 ? default! : TEntity.Create(Save, id, GetPointer(id));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private TEntity Create(int id)
+    {
+        return TEntity.Create(Save, id, GetPointer(id));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private Pointer GetPointer(int id)
+    {
+        return Pointer.Offset(Schema.Offset + (id - 1) * TEntity.GetSize());
     }
 
     public void Flush()
@@ -275,7 +287,7 @@ public abstract class Pool : IDisposable
 
     internal static void Transfer<TSave, TEntity>(Pool<TSave, TEntity> fromPool, Pool<TSave, TEntity> toPool)
         where TSave : Save<TSave>, ISave<TSave>
-        where TEntity : IEntity<Pool<TSave, TEntity>, TEntity>
+        where TEntity : IEntity<TSave, TEntity>
     {
         toPool.Length = fromPool.Length;
 
@@ -285,9 +297,9 @@ public abstract class Pool : IDisposable
 
         for (var i = 0; i < fromPool.Length; i++)
         {
-            var fromEntity = fromPool.GetValue(i + 1);
+            var fromEntity = fromPool.Get(i + 1);
 
-            var toEntity = toPool.GetValue(i + 1);
+            var toEntity = toPool.Get(i + 1);
 
             for (var j = 0; j < fromProperties.Length; j++)
             {

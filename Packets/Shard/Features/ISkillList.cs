@@ -12,11 +12,15 @@ public interface ISkillList<TSkill, TSkillArray>
     internal void WriteSkills<TData>(TData data)
         where TData : IData
     {
+        var index = 1;
+
         foreach (var skill in Skills)
         {
-            data.WriteUShort((ushort)skill.Id);
+            data.WriteUShort((ushort)index);
 
             data.WriteUShort(skill.Value);
+
+            index++;
         }
     }
 }

@@ -5,15 +5,15 @@ using Microsoft.CodeAnalysis;
 
 namespace Core.Generator.Domain.Members.Properties
 {
-    public class ObjectPropertyMember : PropertyMember
+    public class StoredPropertyMember : PropertyMember
     {
-        private static readonly PropertyMergeDelegate PropertyMergeFactory = (o, n, t, tn, m) => new ObjectPropertyMerge(o, n, t, tn, m.Cast<ObjectPropertyMember>());
+        private static readonly PropertyMergeDelegate PropertyMergeFactory = (o, n, t, tn, m) => new ObjectPropertyMerge(o, n, t, tn, m.Cast<StoredPropertyMember>());
 
         public override PropertyMergeDelegate Merger => PropertyMergeFactory;
 
         public AttributeData LinkAttribute { get; }
 
-        public ObjectPropertyMember(Object @object, INamedTypeSymbol @interface, IPropertySymbol original) : base(@object, @interface, original)
+        public StoredPropertyMember(Object @object, INamedTypeSymbol @interface, IPropertySymbol original) : base(@object, @interface, original)
         {
             LinkAttribute = original.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "LinkAttribute");
         }
@@ -23,13 +23,13 @@ namespace Core.Generator.Domain.Members.Properties
             return original.Type.Kind == SymbolKind.TypeParameter;
         }
 
-        public class ObjectPropertyMerge : PropertyMerge<ObjectPropertyMember>
+        public class ObjectPropertyMerge : PropertyMerge<StoredPropertyMember>
         {
             public Property Property { get; private set; }
 
             public string Link { get; set; }
 
-            public ObjectPropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<ObjectPropertyMember> members) : base(@object, name, type, typeName, members)
+            public ObjectPropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<StoredPropertyMember> members) : base(@object, name, type, typeName, members)
             {
                 var source = Members
                     .GroupBy(m => m.Original, SymbolEqualityComparer.Default)
@@ -71,14 +71,14 @@ namespace Core.Generator.Domain.Members.Properties
             {
                 var property = GetProperty();
 
-                return $"get => this.GetValue(Pool.Save.{Type}Store, {ResolveOffset(property)});";
+                return $"get => this.GetStored(Save.{Type}Store, {ResolveOffset(property)});";
             }
 
             public override string ResolveSetter()
             {
                 var property = GetProperty();
 
-                return $"set => this.SetValue(Pool.Save.{Type}Store, {ResolveOffset(property)}, value);";
+                return $"set => this.SetStored(Save.{Type}Store, {ResolveOffset(property)}, value);";
             }
 
             private Property GetProperty()

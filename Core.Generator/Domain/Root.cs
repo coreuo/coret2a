@@ -91,7 +91,12 @@ namespace Core.Generator.Domain
                 .SelectMany(o => o.PropertyMembers.SelectMany(m => m.ResolveProperties()))
                 .GroupBy(p => p.Object);
 
-            foreach (var grouped in properties) {grouped.Key.AssignProperties(grouped);}
+            foreach (var grouped in properties)
+            {
+                grouped.Key.Properties = grouped.Key.MutateProperties(grouped).ToImmutableList();
+
+                grouped.Key.AssignMetaData();
+            }
         }
 
         private void AssignCalls()
@@ -150,7 +155,7 @@ public class Save : Save<Save>, ISave<Save>
         {f};"))}
     }}
 
-    public static Pool<Save, TEntity> CreatePool<TEntity>(Save save, Schema schema, string? label = null, bool isSynchronized = false) where TEntity : IEntity<Pool<Save, TEntity>, TEntity>
+    public static Pool<Save, TEntity> CreatePool<TEntity>(Save save, Schema schema, string? label = null, bool isSynchronized = false) where TEntity : IEntity<Save, TEntity>
     {{
         return new Pool<Save, TEntity>(save, schema, label, isSynchronized);
     }}

@@ -27,7 +27,7 @@ namespace Core.Generator.Domain.Members.Methods
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, 0, $"Pool.Save.{ReturnTypeName}Store.Lease", string.Empty, true);
+                yield return new Call(Object, this, 0, $"Save.{ReturnTypeName}Store.Lease", string.Empty, true);
             }
         }
     }

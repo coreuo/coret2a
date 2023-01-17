@@ -1,10 +1,13 @@
 ﻿namespace Core.Launcher.Domain;
 
+public interface IObject<TSave> : IObject
+{
+    TSave Save { get; }
+}
+
 public interface IObject
 {
-    int Id { get; }
-
     Pointer Pointer { get; }
 
-    public Pool GetPool();
+    public static abstract int GetSize();
 }

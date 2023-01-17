@@ -28,7 +28,7 @@ public readonly unsafe struct Queue<TEntity> : IProducerConsumerCollection<TEnti
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryDequeue(out TEntity entity)
     {
-        entity = Pool.GetValue(*Top);
+        entity = Pool.Get(*Top);
 
         if (*Top == 0) return false;
 
@@ -46,7 +46,7 @@ public readonly unsafe struct Queue<TEntity> : IProducerConsumerCollection<TEnti
         }
         else if (*Bottom > 0)
         {
-            var existing = Pool.GetValue(*Bottom);
+            var existing = Pool.Get(*Bottom);
 
             existing.SetInt32(Next, entity.Id);
         }

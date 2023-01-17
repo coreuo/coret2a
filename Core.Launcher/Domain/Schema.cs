@@ -29,7 +29,7 @@ public class Schema
 
         for (var i = 0; i < _collection.Length; i++)
         {
-            properties[i] = new Property(_collection[i].Name, _collection[i].Size, _collection[i].Offset);
+            properties[i] = new Property(_collection[i].Offset, _collection[i].Size, _collection[i].Name);
         }
 
         schema._collection = properties;
@@ -67,7 +67,7 @@ public class Schema
 
             var size = reader.ReadByte();
 
-            var property = new Property(name, size)
+            var property = new Property(-1, size, name)
             {
                 Offset = offset
             };

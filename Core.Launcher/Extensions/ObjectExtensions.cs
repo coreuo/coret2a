@@ -1,6 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
 using Core.Abstract.Domain;
-using Core.Launcher.Collections;
 using Core.Launcher.Domain;
 
 namespace Core.Launcher.Extensions;
@@ -8,19 +7,19 @@ namespace Core.Launcher.Extensions;
 public static class ObjectExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TValue GetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset)
+    public static TValue GetStored<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset)
         where TObject : IObject
     {
         var id = @object.GetInt32(offset);
 
-        return store.GetValue(id);
+        return store.Get(id);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void SetValue<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset, TValue value)
+    public static void SetStored<TObject, TValue>(this TObject @object, IStore<TValue> store, int offset, TValue value)
         where TObject : IObject
     {
-        var id = store.GetId(value);
+        var id = store.Get(value);
 
         @object.SetInt32(offset, id);
     }
@@ -33,30 +32,6 @@ public static class ObjectExtensions
         var pointer = @object.GetPointer(offset);
 
         return new Span<TValue>(pointer, length);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe ConcurrentQueue<TChild> GetConcurrentQueue<TParent, TChild>(this TParent parent, int parentOffset, IPool<TChild> children, int childrenOffset)
-        where TParent : IEntity
-        where TChild : IEntity
-    {
-        return new ConcurrentQueue<TChild>(parent.GetInt32Pointer(parentOffset), children, childrenOffset);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe Collections.List<TChild> GetList<TParent, TChild>(this TParent parent, int parentOffset, IPool<TChild> children, int childrenOffset)
-        where TParent : IEntity
-        where TChild : IEntity
-    {
-        return new Collections.List<TChild>(parent.Id, parent.GetInt32Pointer(parentOffset), children, childrenOffset);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Array<TChild> GetArray<TParent, TChild>(this TParent parent, int offset, int count)
-        where TParent : IObject
-        where TChild : IElement<TChild>
-    {
-        return new Array<TChild>(count, parent.GetPool(), parent.Id, offset);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
