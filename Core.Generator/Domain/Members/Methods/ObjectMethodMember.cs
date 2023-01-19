@@ -13,12 +13,25 @@ namespace Core.Generator.Domain.Members.Methods
 
         public double? Priority { get; }
 
+        public (string method, string property, int value)? Case { get; }
+
         public ObjectMethodMember(Object @object, INamedTypeSymbol @interface, IMethodSymbol original) : base(@object, @interface, original)
         {
             Priority = original
                 .GetAttributes()
                 .SingleOrDefault(a => a.AttributeClass?.Name == "PriorityAttribute")
                 ?.ConstructorArguments[0].Value as double?;
+
+            Case = original
+                .GetAttributes()
+                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 3)
+                .Select(a =>
+                    a.ConstructorArguments[0].Value is string method &&
+                    a.ConstructorArguments[1].Value is string property && 
+                    a.ConstructorArguments[2].Value is int value
+                        ? ((string, string, int)?)(method, property, value)
+                        : null)
+                .SingleOrDefault();
         }
 
         public string ResolveHandler()
@@ -51,9 +64,13 @@ namespace Core.Generator.Domain.Members.Methods
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                return Members
+                var calls = Members
                     .Where(m => !m.Original.IsAbstract && m.Priority != null)
-                    .Select(m => new Call(Object, this, m.Priority.Value, $"{m.ResolveHandler()}.{m.Name}", string.Join(", ", new[]{"this"}.Concat(Parameters.Select(p => $"{p.name}")))));
+                    .Select(m => new Call(Object, this, Name, null, m.Priority.Value, $"{m.ResolveHandler()}.{m.Name}", string.Join(", ", new[]{"this"}.Concat(Parameters.Select(p => $"{p.name}")))));
+
+                foreach (var call in calls) yield return call;
+
+                //foreach (var member in Members.Where(m => m.Case != null)) yield return new Call(Object, this, member.Priority.Value, member.Case.Value.)
             }
         }
     }

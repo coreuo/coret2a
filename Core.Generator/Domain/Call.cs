@@ -8,6 +8,10 @@ namespace Core.Generator.Domain
 
         public MethodMember.MethodMerge MethodMerge { get; }
 
+        public string Caller { get; }
+
+        public (string property, int value)? Case { get; }
+
         public double Priority { get; }
 
         public string Name { get; }
@@ -16,10 +20,12 @@ namespace Core.Generator.Domain
 
         public bool Return { get; }
 
-        public Call(Object @object, MethodMember.MethodMerge methodMerge, double priority, string name, string parameters, bool @return = false)
+        public Call(Object @object, MethodMember.MethodMerge methodMerge, string caller, (string property, int value)? @case, double priority, string name, string parameters, bool @return = false)
         {
             Object = @object;
             MethodMerge = methodMerge;
+            Caller = caller;
+            Case = @case;
             Priority = priority;
             Name = name;
             Parameters = parameters;

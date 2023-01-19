@@ -23,6 +23,8 @@ namespace Core.Generator.Domain
 
         public IImmutableList<Property> Properties { get; set; } = new Property[] { }.ToImmutableArray();
 
+        public ImmutableDictionary<string, ImmutableList<Call>> Calls { get; set; } = new (string, Call[])[]{}.ToImmutableDictionary(v => v.Item1, v => v.Item2.ToImmutableList());
+
         public string Size { get; set; } = "0";
 
         protected Object(Root root, string name, ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> dictionary)
@@ -72,17 +74,14 @@ namespace Core.Generator.Domain
             return Name;
         }
 
-        public void AssignCalls()
-        {
-            foreach (var member in MethodMembers)
-            {
-                member.Calls = member.ResolveCalls().OrderBy(c => c.Priority).ToImmutableList();
-            }
-        }
-
         public virtual IEnumerable<Property> MutateProperties(IEnumerable<Property> properties)
         {
             return properties.OrderBy(p => p.Identifier);
+        }
+
+        public virtual IEnumerable<Call> MutateCalls(IEnumerable<Call> calls)
+        {
+            return calls.OrderBy(c => c.Priority);
         }
 
         public void AssignMetaData()
@@ -143,8 +142,8 @@ namespace Launcher.Domain;";
             return !MethodMembers.Any() ? string.Empty : $@"
 {string.Join(Environment.NewLine, MethodMembers.Select(m => $@"
     public {m.ResolveDeclaration()}
-    {{{string.Join(Environment.NewLine, m.Calls.OrderBy(p => p.Priority).Select(c => $@"
-        {(c.Return ? "return " : string.Empty)}{c.Name}({c.Parameters});"))}
+    {{{string.Join(Environment.NewLine, Calls.TryGetValue(m.Name, out var calls) ? calls.Select(c => $@"
+        {(c.Return ? "return " : string.Empty)}{c.Name}({c.Parameters});") : new string[]{})}
     }}"))}";
         }
 

@@ -101,9 +101,15 @@ namespace Core.Generator.Domain
 
         private void AssignCalls()
         {
-            foreach (var @object in Objects.Values)
+            var calls = Objects.Values
+                .SelectMany(o => o.MethodMembers.SelectMany(m => m.ResolveCalls()))
+                .GroupBy(p => p.Object);
+
+            foreach (var grouped in calls)
             {
-                @object.AssignCalls();
+                grouped.Key.Calls = grouped
+                    .GroupBy(g => g.Caller)
+                    .ToImmutableDictionary(g => g.Key, v => grouped.Key.MutateCalls(v).ToImmutableList());
             }
         }
 

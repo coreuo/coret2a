@@ -32,7 +32,7 @@ namespace Core.Generator.Domain.Members.Methods
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, 0, $"Save.{ReturnTypeName}Store.Get", Parameters.Single().name, true);
+                yield return new Call(Object, this, Name, null, 0, $"Save.{ReturnTypeName}Store.Get", Parameters.Single().name, true);
             }
         }
     }

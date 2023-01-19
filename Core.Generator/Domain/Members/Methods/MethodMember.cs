@@ -102,8 +102,6 @@ namespace Core.Generator.Domain.Members.Methods
 
             public ImmutableArray<(string fullType, string type, string name)> Parameters { get; }
 
-            public IImmutableList<Call> Calls { get; set; }
-
             protected MethodMerge(Object o, string name, string returnType, string returnTypeName, string parameters)
             {
                 Object = o;
