@@ -3,7 +3,7 @@
 namespace Packets.Server;
 
 [Entity("State")]
-public interface IState<in TData> : ISeed
+public interface IState<TData> : ISeed
     where TData : IData
 {
     void Send(TData data);

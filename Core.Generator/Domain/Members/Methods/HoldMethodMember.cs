@@ -6,7 +6,7 @@ namespace Core.Generator.Domain.Members.Methods
 {
     public class HoldMethodMember : MethodMember
     {
-        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, p, m) => new HoldMethodMerge(o, n, rt, rtn, p, m.Cast<HoldMethodMember>());
+        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, m) => new HoldMethodMerge(o, n, rt, rtn, m.Cast<HoldMethodMember>());
 
         public override MethodMergeDelegate Merger => MethodMergeFactory;
 
@@ -24,13 +24,13 @@ namespace Core.Generator.Domain.Members.Methods
 
         public class HoldMethodMerge : MethodMerge<HoldMethodMember>
         {
-            public HoldMethodMerge(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<HoldMethodMember> members) : base(@object, name, returnType, returnTypeName, parameters, members)
+            public HoldMethodMerge(Object @object, string name, string returnType, string returnTypeName, IEnumerable<HoldMethodMember> members) : base(@object, name, returnType, returnTypeName, members)
             {
             }
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, Name, null, 0, $"Save.{Parameters.Single().type}Store.Hold", Parameters.Single().name);
+                yield return new Call(Object, this, Name, default, 0, $"Save.{Parameters.Single().type}Store.Hold", Parameters.Single().name);
             }
         }
     }

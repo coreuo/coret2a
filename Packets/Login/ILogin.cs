@@ -21,93 +21,43 @@ public interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
 #if DEBUG
     string Identity { get; }
 #endif
-
-    void PacketAccountLoginRequest(TState state);
-
-    void PacketHardwareInfo(TState state);
-
-    void PacketBritanniaSelect(TState state);
-
-    void InternalShardAccountOnline();
-
-    void InternalShardAccountOffline();
-
-    [Priority(1.0)]
-    public void OnInternalReceived(TData data)
+    [Priority(0.1)]
+    [Case("InternalPacketReceived", "id", 0x01)]
+    public void OnInternalShardAccountOnline(TData data)
     {
-        var id = BeginInternalIncomingPacket(data);
-
-        switch (id)
-        {
-            case 0x01:
-            {
-                ReadName(data);
-
-                EndIncomingPacket(data);
-
-                InternalShardAccountOnline();
-
-                return;
-            }
-            case 0x02:
-            {
-                ReadName(data);
-
-                EndIncomingPacket(data);
-
-                InternalShardAccountOffline();
-
-                return;
-            }
-            default: throw new InvalidOperationException($"Unknown internal 0x{id:X2}.");
-        }
+        ReadName(data);
     }
 
-    [Priority(1.0)]
-    public void OnPacketReceived(TState state, TData data)
+    [Priority(0.1)]
+    [Case("InternalPacketReceived", "id", 0x02)]
+    public void OnInternalShardAccountOffline(TData data)
     {
-        if (state.Seed == 0) return;
+        ReadName(data);
+    }
 
-        var id = BeginIncomingPacket(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x80)]
+    public void OnPacketAccountLoginRequest(TState state, TData data)
+    {
+        state.ReadName(data);
 
-        switch (id)
-        {
-            case 0x80:
-            {
-                state.ReadName(data);
+        state.ReadPassword(data);
 
-                state.ReadPassword(data);
+        state.ReadLoginKey(data);
+    }
 
-                state.ReadLoginKey(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0xA0)]
+    public void OnPacketBritanniaSelect(TState state, TData data)
+    {
+        state.ReadShard(data);
+    }
 
-                EndIncomingPacket(data);
-
-                PacketAccountLoginRequest(state);
-
-                return;
-            }
-            case 0xA0:
-            {
-                state.ReadShard(data);
-
-                EndIncomingPacket(data);
-
-                PacketBritanniaSelect(state);
-
-                return;
-            }
-            case 0xA4:
-            {
-                state.ReadHardwareInfo(data);
-
-                EndIncomingPacket(data);
-
-                PacketHardwareInfo(state);
-
-                return;
-            }
-            default: throw new InvalidOperationException($"Unknown packet 0x{id:X2}.");
-        }
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0xA4)]
+    public void OnPacketHardwareInfo(TState state, TData data)
+    {
+        state.ReadHardwareInfo(data);
     }
 
     [Priority(1.0)]

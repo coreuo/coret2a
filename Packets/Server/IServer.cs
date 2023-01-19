@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 namespace Packets.Server;
 
 [Entity("Server")]
-public interface IServer<in TState, in TData, out TDataConcurrentQueue>
+public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer<TData>
     where TState : IState<TData>
     where TData : IData
     where TDataConcurrentQueue : IProducerConsumerCollection<TData>
@@ -16,11 +16,13 @@ public interface IServer<in TState, in TData, out TDataConcurrentQueue>
 
     void ReleaseData(TData data);
 
-    void InternalReceived(TData data);
+    void InternalPacketReceived(TData data, byte id);
 
-    void PacketReceived(TState state, TData data);
+    void BatchReceived(TState state, TData data);
 
-    void PacketSeed(TState state);
+    void PacketReceived(TState state, TData data, byte id);
+
+    void Seed(TState state, TData data);
 
     [Priority(1.0)]
     public void OnSendInternal(TData data)
@@ -36,25 +38,43 @@ public interface IServer<in TState, in TData, out TDataConcurrentQueue>
 #if DEBUG
             Debug($"internal received {data.Length} bytes");
 #endif
-            InternalReceived(data);
+            var id = BeginInternalIncomingPacket(data);
 
-            ReleaseData(data);
+            InternalPacketReceived(data, id);
         }
+    }
+
+    [Priority(0.2)]
+    [Link("InternalPacketReceived")]
+    public void OnInternalReceivedEnd(TData data)
+    {
+        EndIncomingPacket(data);
+
+        ReleaseData(data);
     }
 
     [Priority(1.0)]
     public void OnDataReceived(TState state, TData data)
     {
+        if (state.Seed == 0) Seed(state, data);
+
+        BatchReceived(state, data);
+    }
+
+    [Priority(1.0)]
+    public void OnBatchReceived(TState state, TData data)
+    {
         while (data.Start < data.Length)
         {
-            PacketReceived(state, data);
+            var id = BeginIncomingPacket(data);
+
+            PacketReceived(state, data, id);
         }
     }
 
-    [Priority(1.1)]
-    public void OnPacketReceived(TState state, TData data)
+    [Priority(0.1)]
+    public void OnSeed(TState state, TData data)
     {
-        if (state.Seed != 0) return;
 #if DEBUG
         DebugIncoming("0x?? SEED");
 #endif
@@ -63,8 +83,13 @@ public interface IServer<in TState, in TData, out TDataConcurrentQueue>
         state.ReadSeed(data);
 
         data.ReadEnd();
+    }
 
-        PacketSeed(state);
+    [Priority(0.2)]
+    [Link("PacketReceived")]
+    public void OnPacketReceivedEnd(TData data)
+    {
+        EndIncomingPacket(data);
     }
 #if DEBUG
     private static void DebugIncoming(string text)

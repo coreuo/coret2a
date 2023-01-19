@@ -151,19 +151,19 @@ namespace Launcher.Domain;";
             if (!Calls.TryGetValue(method.Name, out var calls)) return string.Empty;
 
             var body = calls
-                .GroupBy(c => (c.Priority, c.Case?.subject, c.Case?.property))
+                .GroupBy(c => (c.Priority, c.Case.subject, c.Case.property))
                 .OrderBy(g => g.Key.Priority)
-                .SelectMany(g => g.Key.property == null ? g.Select(c => $@"
-        {c.GetCode()}") : g.Select(c => $@"
-        switch({g.Key.subject}.{g.Key.property})
-        {{
-            case {c.Case?.value ?? 0}:
+                .Select(g => g.Key.property == null ? string.Join(Environment.NewLine, g.Select(c => $@"
+        {c.GetCode()}")) : $@"
+        switch({(g.Key.subject == null ? string.Empty : $"{g.Key.subject}.")}{g.Key.property})
+        {{{string.Join(string.Empty, g.OrderBy(c => c.Case.value).Select(c => $@"
+            case {c.Case.value}:
             {{
                 {c.GetCode()}
 
                 break;
-            }}
-        }}"));
+            }}"))}
+        }}");
 
             return string.Join(Environment.NewLine, body);
         }

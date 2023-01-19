@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Xml.Linq;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
@@ -9,7 +10,7 @@ namespace Core.Generator.Domain.Members.Methods
 {
     public abstract class MethodMember
     {
-        public delegate MethodMerge MethodMergeDelegate(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<MethodMember> members);
+        public delegate MethodMerge MethodMergeDelegate(Object @object, string name, string returnType, string returnTypeName, IEnumerable<MethodMember> members);
 
         public Object Object { get; }
 
@@ -84,9 +85,48 @@ namespace Core.Generator.Domain.Members.Methods
         {
             public IImmutableSet<T> Members { get; }
 
-            protected MethodMerge(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<T> members) : base(@object, name, returnType, returnTypeName, parameters)
+            protected MethodMerge(Object @object, string name, string returnType, string returnTypeName, IEnumerable<T> members) : base(@object, name, returnType, returnTypeName)
             {
                 Members = members.ToImmutableHashSet();
+
+                Parameters = ResolveParameters().ToImmutableArray();
+            }
+
+            private IEnumerable<(string fullType, string type, string name)> ResolveParameters()
+            {
+                var parameters = Members
+                    .Where(m => m.Original.IsAbstract)
+                    .Select(m => string.Join(";", m.Original.Parameters.Select(p => ResolveParameter(m.Interface, p))))
+                    .Distinct()
+                    .SingleOrDefault() ?? string.Join(";", Members
+                    .SelectMany(m => m.Original.Parameters.Select(p => ResolveParameter(m.Interface, p)))
+                    .Distinct());
+
+                return parameters
+                    .Split(';')
+                    .Select(ResolveParameterSplit)
+                    .Where(s => s != default);
+            }
+
+            protected IEnumerable<(string fullType, string type, string name)> ResolveParameters(T member)
+            {
+                return member.Original.Parameters
+                    .Select(p => ResolveParameterSplit(ResolveParameter(member.Interface, p)))
+                    .Where(s => s != default);
+            }
+
+            private static (string fullType, string type, string name) ResolveParameterSplit(string parameters)
+            {
+                var split = parameters.Split(' ');
+
+                return split.Length != 3 ? default : (split[0], split[1], split[2]);
+            }
+
+            private string ResolveParameter(ISymbol @interface, IParameterSymbol parameter)
+            {
+                var dictionary = Object.Dictionary[@interface];
+
+                return dictionary.TryGetValue(parameter.Type, out var name) ? $"{name} {name} {parameter.Name}" : $"{parameter.Type} {parameter.Type.Name} {parameter.Name}";
             }
         }
 
@@ -100,19 +140,19 @@ namespace Core.Generator.Domain.Members.Methods
 
             public string ReturnTypeName { get; }
 
-            public ImmutableArray<(string fullType, string type, string name)> Parameters { get; }
+            public ImmutableArray<(string fullType, string type, string name)> Parameters { get; set; }
 
-            protected MethodMerge(Object o, string name, string returnType, string returnTypeName, string parameters)
+            protected MethodMerge(Object o, string name, string returnType, string returnTypeName)
             {
                 Object = o;
                 Name = name;
                 ReturnType = returnType;
                 ReturnTypeName = returnTypeName;
-                Parameters = parameters
+                /*Parameters = parameters
                     .Split(',')
                     .Where(p => p.Length > 0)
                     .Select(p => (p, p.Split('.').Last(), $"@{p.Split('.').Last().Substring(0, 1).ToLower()}{p.Split('.').Last().Substring(1)}"))
-                    .ToImmutableArray();
+                    .ToImmutableArray();*/
             }
 
             public virtual string ResolveDeclaration()

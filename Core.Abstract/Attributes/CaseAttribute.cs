@@ -17,4 +17,12 @@ public class CaseAttribute : Attribute
         Property = property;
         Value = value;
     }
+
+    public CaseAttribute(string method, string property, int value)
+    {
+        Method = method;
+        Subject = null!;
+        Property = property;
+        Value = value;
+    }
 }

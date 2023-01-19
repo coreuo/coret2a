@@ -6,7 +6,7 @@ namespace Core.Generator.Domain.Members.Methods
 {
     public class LeaseMethodMember : MethodMember
     {
-        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, p, m) => new LeaseMethodMerge(o, n, rt, rtn, p, m.Cast<LeaseMethodMember>());
+        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, m) => new LeaseMethodMerge(o, n, rt, rtn, m.Cast<LeaseMethodMember>());
 
         public override MethodMergeDelegate Merger => MethodMergeFactory;
 
@@ -21,13 +21,13 @@ namespace Core.Generator.Domain.Members.Methods
 
         public class LeaseMethodMerge : MethodMerge<LeaseMethodMember>
         {
-            public LeaseMethodMerge(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<LeaseMethodMember> members) : base(@object, name, returnType, returnTypeName, parameters, members)
+            public LeaseMethodMerge(Object @object, string name, string returnType, string returnTypeName, IEnumerable<LeaseMethodMember> members) : base(@object, name, returnType, returnTypeName, members)
             {
             }
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, Name, null, 0, $"Save.{ReturnTypeName}Store.Lease", string.Empty, true);
+                yield return new Call(Object, this, Name, default, 0, $"Save.{ReturnTypeName}Store.Lease", string.Empty, true);
             }
         }
     }

@@ -5,7 +5,7 @@ using Packets.Server.Features;
 namespace Packets.Login;
 
 [Entity("Login", "State")]
-public interface IState<in TData, TAccount, TShard> : Server.IState<TData>,
+public interface IState<TData, TAccount, TShard> : Server.IState<TData>,
     IName,
     IPassword,
     ILoginKey,

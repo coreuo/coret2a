@@ -5,7 +5,7 @@ using Packets.Shard.Features;
 namespace Packets.Shard;
 
 [Entity("Shard", "State")]
-public interface IState<in TData, out TAccount, out TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> : Server.IState<TData>,
+public interface IState<TData, out TAccount, out TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> : Server.IState<TData>,
     IAccessKey,
     ICharacterSlot,
     ITipRequest,

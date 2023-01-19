@@ -28,38 +28,8 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
     [Link("LoginServer.Shards.Owner")]
     TLogin Login { get; }
 
-    void PacketPreLogin(TState state);
-
-    void PacketPostLogin(TState state);
-
-    void PacketRequestTip(TState state);
-
-    void PacketRequestMove(TState state);
-
-    void PacketRequestObjectUse(TState state);
-
-    void PacketClientQuery(TState state);
-
-    void PacketCombatRequest(TState state);
-
-    void PacketPingRequest(TState state);
-
-    [Priority(0.01)]
-    [Link("InternalReceived")]
-    public void OnInternalReceivedBegin(TData data)
-    {
-        data.Packet = BeginInternalIncomingPacket(data);
-    }
-
-    [Priority(0.2)]
-    [Link("InternalReceived")]
-    public void OnInternalReceivedEnd(TData data)
-    {
-        EndIncomingPacket(data);
-    }
-
     [Priority(0.1)]
-    [Case("InternalReceived", "data", "Packet", 0x00)]
+    [Case("InternalPacketReceived", "id", 0x00)]
     public void OnInternalShardAuthorization(TData data)
     {
         ReadName(data);
@@ -69,117 +39,80 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
         ReadAccessKey(data);
     }
 
-    [Priority(1.0)]
-    public void OnPacketReceived(TState state, TData data)
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x02)]
+    public void OnPacketRequestMove(TState state, TData data)
     {
-        if (state.Seed == 0) return;
+        state.ReadDirection(data);
 
-        var id = BeginIncomingPacket(data);
+        state.ReadStatus(data);
+    }
 
-        switch (id)
-        {
-            case 0x02:
-            {
-                state.ReadDirection(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x06)]
+    public void OnPacketRequestObjectUse(TState state, TData data)
+    {
+        state.ReadTarget(data);
+    }
 
-                state.ReadStatus(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x34)]
+    public void OnPacketClientQuery(TState state, TData data)
+    {
+        state.ReadPattern(data);
 
-                EndIncomingPacket(data);
+        state.ReadMode(data);
 
-                PacketRequestMove(state);
+        state.ReadTarget(data);
+    }
 
-                return;
-            }
-            case 0x06:
-            {
-                state.ReadTarget(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x5D)]
+    public void OnPacketPreLogin(TState state, TData data)
+    {
+        state.ReadPattern(data);
 
-                EndIncomingPacket(data);
+        state.ReadName(data);
 
-                PacketRequestObjectUse(state);
+        state.ReadPassword(data);
 
-                return;
-            }
-            case 0x34:
-            {
-                state.ReadPattern(data);
+        state.ReadCharacterSlot(data);
 
-                state.ReadMode(data);
+        state.ReadSeed(data);
+    }
 
-                state.ReadTarget(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x72)]
+    public void OnPacketCombatRequest(TState state, TData data)
+    {
+        state.ReadCombat(data);
+    }
 
-                EndIncomingPacket(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x73)]
+    public void OnPacketPingRequest(TState state, TData data)
+    {
+        state.ReadPing(data);
+    }
 
-                PacketClientQuery(state);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0x91)]
+    public void OnPacketPostLogin(TState state, TData data)
+    {
+        state.ReadAccessKey(data);
 
-                return;
-            }
-            case 0x5D:
-            {
-                state.ReadPattern(data);
-                
-                state.ReadName(data);
+        state.ReadName(data);
 
-                state.ReadPassword(data);
+        state.ReadPassword(data);
+    }
 
-                state.ReadCharacterSlot(data);
+    [Priority(0.1)]
+    [Case("PacketReceived", "id", 0xA7)]
+    public void OnPacketRequestTip(TState state, TData data)
+    {
+        state.ReadTipRequest(data);
 
-                state.ReadSeed(data);
-
-                EndIncomingPacket(data);
-
-                PacketPreLogin(state);
-
-                return;
-            }
-            case 0x72:
-            {
-                state.ReadCombat(data);
-
-                EndIncomingPacket(data);
-
-                PacketCombatRequest(state);
-
-                return;
-            }
-            case 0x73:
-            {
-                state.ReadPing(data);
-
-                EndIncomingPacket(data);
-
-                PacketPingRequest(state);
-
-                return;
-            }
-            case 0x91:
-            {
-                state.ReadAccessKey(data);
-
-                state.ReadName(data);
-
-                state.ReadPassword(data);
-
-                EndIncomingPacket(data);
-
-                PacketPostLogin(state);
-
-                return;
-            }
-            case 0xA7:
-            {
-                state.ReadTipRequest(data);
-
-                state.ReadDirection(data);
-
-                EndIncomingPacket(data);
-
-                PacketRequestTip(state);
-
-                return;
-            }
-            default: throw new InvalidOperationException($"Unknown packet 0x{id:X2}.");
-        }
+        state.ReadDirection(data);
     }
 
     [Priority(1.0)]

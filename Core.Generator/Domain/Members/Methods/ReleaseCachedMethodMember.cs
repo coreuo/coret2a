@@ -6,7 +6,7 @@ namespace Core.Generator.Domain.Members.Methods
 {
     public class ReleaseCachedMethodMember : MethodMember
     {
-        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, p, m) => new ReleaseCachedMethodMerge(o, n, rt, rtn, p, m.Cast<ReleaseCachedMethodMember>());
+        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, m) => new ReleaseCachedMethodMerge(o, n, rt, rtn, m.Cast<ReleaseCachedMethodMember>());
 
         public override MethodMergeDelegate Merger => MethodMergeFactory;
 
@@ -24,13 +24,13 @@ namespace Core.Generator.Domain.Members.Methods
 
         public class ReleaseCachedMethodMerge : MethodMerge<ReleaseCachedMethodMember>
         {
-            public ReleaseCachedMethodMerge(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<ReleaseCachedMethodMember> members) : base(@object, name, returnType, returnTypeName, parameters, members)
+            public ReleaseCachedMethodMerge(Object @object, string name, string returnType, string returnTypeName, IEnumerable<ReleaseCachedMethodMember> members) : base(@object, name, returnType, returnTypeName, members)
             {
             }
 
             public override IEnumerable<Call> ResolveCalls()
             {
-                yield return new Call(Object, this, Name, null, 0, $"Save.{Parameters.Single().type}Store.Release", Parameters.Single().name);
+                yield return new Call(Object, this, Name, default, 0, $"Save.{Parameters.Single().type}Store.Release", Parameters.Single().name);
             }
         }
     }

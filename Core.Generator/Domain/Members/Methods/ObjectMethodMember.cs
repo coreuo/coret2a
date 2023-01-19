@@ -9,7 +9,7 @@ namespace Core.Generator.Domain.Members.Methods
 {
     public class ObjectMethodMember : MethodMember
     {
-        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, p, m) => new ObjectMethodMerge(o, n, rt, rtn, p, m.Cast<ObjectMethodMember>());
+        private static readonly MethodMergeDelegate MethodMergeFactory = (o, n, rt, rtn, m) => new ObjectMethodMerge(o, n, rt, rtn, m.Cast<ObjectMethodMember>());
 
         public override MethodMergeDelegate Merger => MethodMergeFactory;
 
@@ -19,7 +19,7 @@ namespace Core.Generator.Domain.Members.Methods
 
         public override string GroupName => Link ?? base.GroupName;
 
-        public (string method, string subject, string property, int value)? Case { get; }
+        public (string method, string subject, string property, int value) Case { get; }
 
         public ObjectMethodMember(Object @object, INamedTypeSymbol @interface, IMethodSymbol original) : base(@object, @interface, original)
         {
@@ -35,14 +35,23 @@ namespace Core.Generator.Domain.Members.Methods
 
             Case = original
                 .GetAttributes()
-                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 4)
+                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 3)
                 .Select(a =>
                     a.ConstructorArguments[0].Value is string method &&
-                    a.ConstructorArguments[1].Value is string subject &&
-                    a.ConstructorArguments[2].Value is string property && 
-                    a.ConstructorArguments[3].Value is int value
-                        ? ((string, string, string, int)?)(method, subject, property, value)
-                        : null)
+                    a.ConstructorArguments[1].Value is string property && 
+                    a.ConstructorArguments[2].Value is int value
+                        ? (method, (string)null, property, value)
+                        : default)
+                .Concat(original
+                    .GetAttributes()
+                    .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 4)
+                    .Select(a =>
+                        a.ConstructorArguments[0].Value is string method &&
+                        a.ConstructorArguments[1].Value is string subject &&
+                        a.ConstructorArguments[2].Value is string property &&
+                        a.ConstructorArguments[3].Value is int value
+                            ? (method, subject, property, value)
+                            : default))
                 .SingleOrDefault();
         }
 
@@ -55,7 +64,7 @@ namespace Core.Generator.Domain.Members.Methods
             return $"{Interface.ContainingNamespace}.{root}Handlers<{string.Join(", ", types)}>";
         }
 
-        public Call ResolveCall(ObjectMethodMerge merge, string caller, (string subject, string property, int value)? @case, ImmutableArray<(string fullType, string type, string name)> parameters)
+        public Call ResolveCall(ObjectMethodMerge merge, string caller, (string subject, string property, int value) @case, IEnumerable<(string fullType, string type, string name)> parameters)
         {
             return new Call(Object, merge, caller, @case, Priority ?? 0.0, $"{ResolveHandler()}.{Name}", string.Join(", ", new[] { "this" }.Concat(parameters.Select(p => $"{p.name}"))));
         }
@@ -75,7 +84,7 @@ namespace Core.Generator.Domain.Members.Methods
 
         public class ObjectMethodMerge : MethodMerge<ObjectMethodMember>
         {
-            public ObjectMethodMerge(Object @object, string name, string returnType, string returnTypeName, string parameters, IEnumerable<ObjectMethodMember> members) : base(@object, name, returnType, returnTypeName, parameters, members)
+            public ObjectMethodMerge(Object @object, string name, string returnType, string returnTypeName, IEnumerable<ObjectMethodMember> members) : base(@object, name, returnType, returnTypeName, members)
             {
             }
 
@@ -83,16 +92,25 @@ namespace Core.Generator.Domain.Members.Methods
             {
                 var calls = Members
                     .Where(m => !m.Original.IsAbstract && m.Priority != null)
-                    .Select(m => m.ResolveCall(this, Name, null, Parameters));
+                    .Select(m => m.ResolveCall(this, Name, default, ResolveParameters(m)));
 
                 foreach (var call in calls) yield return call;
 
                 var cases = Members
-                    .Where(m => m.Case != null && m.Priority != null)
-                    .Select(m => (m, c: m.Case.Value))
-                    .Select(p => p.m.ResolveCall(this, p.c.method, (p.c.subject, p.c.property, p.c.value), Parameters));
+                    .Where(m => m.Case != default && m.Priority != null)
+                    .Select(m => (m, c: m.Case))
+                    .SelectMany(p => ResolveCaseCall(p.c));
 
                 foreach (var @case in cases) yield return @case;
+            }
+
+            private IEnumerable<Call> ResolveCaseCall((string method, string subject, string property, int value) @case)
+            {
+                var calls = Members
+                    .Where(m => !m.Original.IsAbstract && m.Priority != null)
+                    .Select(m => m.ResolveCall(this, @case.method, (@case.subject, @case.property, @case.value), ResolveParameters(m)));
+
+                foreach (var call in calls) yield return call;
             }
         }
     }
