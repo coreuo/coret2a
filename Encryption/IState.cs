@@ -23,6 +23,8 @@ public interface IState
 
     bool Encrypted { get; set; }
 
+    bool T2A { get; set; }
+
     internal void Initialize()
     {
         FirstClientKey = GetFirstClientKey(MajorVersion, MinorVersion, Patch);
@@ -36,6 +38,8 @@ public interface IState
         SecondCurrentKey = ((seed ^ 0x43210000) >> 16) | ((~seed ^ 0xabcdffff) & 0xffff0000);
 
         Encrypted = true;
+
+        T2A = true;
     }
 
     internal void Decrypt(Span<byte> buffer, int offset, int length)

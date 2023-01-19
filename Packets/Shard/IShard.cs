@@ -42,6 +42,8 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
     void PacketCombatRequest(TState state);
 
+    void PacketPingRequest(TState state);
+
     void InternalShardAuthorization();
 
     [Priority(1.0)]
@@ -142,6 +144,16 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
                 return;
             }
+            case 0x73:
+            {
+                state.ReadPing(data);
+
+                EndIncomingPacket(data);
+
+                PacketPingRequest(state);
+
+                return;
+            }
             case 0x91:
             {
                 state.ReadAccessKey(data);
@@ -170,6 +182,49 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
             }
             default: throw new InvalidOperationException($"Unknown packet 0x{id:X2}.");
         }
+    }
+
+    [Priority(1.0)]
+    public void OnPacketMobileStatus(TState state)
+    {
+        var character = state.Character;
+
+        var data = BeginOutgoingPacket(0x11);
+
+        character.WriteId(data);
+
+        character.WriteName(data);
+
+        character.WriteHits(data);
+
+        character.WriteMode(data);
+
+        state.WriteExpansions(data);
+
+        if (state.T2A)
+        {
+            character.WriteGender(data);
+
+            character.WriteStrength(data);
+
+            character.WriteDexterity(data);
+
+            character.WriteIntelligence(data);
+
+            character.WriteStamina(data);
+
+            character.WriteMana(data);
+
+            character.WriteGold(data);
+
+            character.WriteArmor(data);
+
+            character.WriteWeight(data);
+        }
+
+        EndOutgoingPacket(data);
+
+        state.Send(data);
     }
 
     [Priority(1.0)]
@@ -340,6 +395,18 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
         var data = BeginOutgoingNoSizePacket(0x72);
 
         state.WriteCombat(data);
+
+        EndOutgoingNoSizePacket(data);
+
+        state.Send(data);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketPingResponse(TState state)
+    {
+        var data = BeginOutgoingNoSizePacket(0x73);
+
+        state.WritePing(data);
 
         EndOutgoingNoSizePacket(data);
 

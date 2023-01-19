@@ -19,6 +19,8 @@ public interface IState<out TAccount, TMobile>
 
     bool Combat { get; }
 
+    byte Ping { get; set; }
+
     internal void TransferName()
     {
         Character.Name.CopyTo(Name);

@@ -25,6 +25,8 @@ public interface IShard<in TState, TAccount, TMobile>
 
     void PacketCombatResponse(TState state);
 
+    void PacketPingResponse(TState state);
+
     void PacketEquippedMobile(TState state);
 
     void PacketLoginComplete(TState state);
@@ -40,6 +42,8 @@ public interface IShard<in TState, TAccount, TMobile>
     void PacketSkills(TState state);
 
     void PacketNakedMobile(TState state);
+
+    void PacketMobileStatus(TState state);
 
     [Priority(1.0)]
     public void OnPacketPostLogin(TState state)
@@ -92,6 +96,12 @@ public interface IShard<in TState, TAccount, TMobile>
     {
         switch (state.Mode)
         {
+            case 0x04:
+            {
+                PacketMobileStatus(state);
+
+                return;
+            }
             case 0x05:
             {
                 PacketSkills(state);
@@ -109,5 +119,11 @@ public interface IShard<in TState, TAccount, TMobile>
         PacketNakedMobile(state);
 
         PacketCombatResponse(state);
+    }
+
+    [Priority(1.0)]
+    public void OnPacketPingRequest(TState state)
+    {
+        PacketPingResponse(state);
     }
 }

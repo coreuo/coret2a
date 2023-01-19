@@ -211,6 +211,19 @@ public interface IData
         Offset += 4;
     }
 
+    internal void WriteUInt(uint value)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} UINT    0x{value:X8} ({value})");
+#endif
+        Value[Start + Offset] = (byte)(value >> 24);
+        Value[Start + Offset + 1] = (byte)(value >> 16);
+        Value[Start + Offset + 2] = (byte)(value >> 8);
+        Value[Start + Offset + 3] = (byte)value;
+
+        Offset += 4;
+    }
+
     internal void WriteIpAddress(IPAddress address)
     {
 #if DEBUG

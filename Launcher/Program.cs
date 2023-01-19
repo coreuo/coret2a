@@ -70,6 +70,30 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     character.Direction = 0x4;
 
+    character.Hits = 50;
+
+    character.HitsMaximum = 80;
+
+    character.Strength = 20;
+
+    character.Dexterity = 20;
+
+    character.Intelligence = 20;
+
+    character.Stamina = 20;
+
+    character.StaminaMaximum = 30;
+
+    character.Mana = 20;
+
+    character.ManaMaximum = 30;
+
+    character.Gold = 1234;
+
+    character.Armor = 70;
+
+    character.Weight = 123;
+
     var map = save.MapStore.Lease();
 
     map.Width = 0x1800;

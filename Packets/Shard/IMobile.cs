@@ -28,10 +28,20 @@ public interface IMobile :
     IBody,
     ILocation,
     IHue,
-    IFemale,
+    IGender,
     IPoison,
     IBlessed,
     ICombat,
-    IHidden
+    IHidden,
+    IHits,
+    IMode,
+    IStrength,
+    IDexterity,
+    IIntelligence,
+    IStamina,
+    IMana,
+    IGold,
+    IArmor,
+    IWeight
 {
 }
