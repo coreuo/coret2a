@@ -44,31 +44,29 @@ public interface IShard<TLogin, in TState, TData, TAccount, TMobile, out TMobile
 
     void PacketPingRequest(TState state);
 
-    void InternalShardAuthorization();
-
-    [Priority(1.0)]
-    public void OnInternalReceived(TData data)
+    [Priority(0.01)]
+    [Link("InternalReceived")]
+    public void OnInternalReceivedBegin(TData data)
     {
-        var id = BeginInternalIncomingPacket(data);
+        data.Packet = BeginInternalIncomingPacket(data);
+    }
 
-        switch (id)
-        {
-            case 0x00:
-            {
-                ReadName(data);
+    [Priority(0.2)]
+    [Link("InternalReceived")]
+    public void OnInternalReceivedEnd(TData data)
+    {
+        EndIncomingPacket(data);
+    }
 
-                ReadPassword(data);
+    [Priority(0.1)]
+    [Case("InternalReceived", "data", "Packet", 0x00)]
+    public void OnInternalShardAuthorization(TData data)
+    {
+        ReadName(data);
 
-                ReadAccessKey(data);
+        ReadPassword(data);
 
-                EndIncomingPacket(data);
-
-                InternalShardAuthorization();
-
-                return;
-            }
-            default: throw new InvalidOperationException($"Unknown internal 0x{id:X2}.");
-        }
+        ReadAccessKey(data);
     }
 
     [Priority(1.0)]

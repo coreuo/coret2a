@@ -10,7 +10,7 @@ namespace Core.Generator.Domain
 
         public string Caller { get; }
 
-        public (string property, int value)? Case { get; }
+        public (string subject, string property, int value)? Case { get; }
 
         public double Priority { get; }
 
@@ -20,7 +20,7 @@ namespace Core.Generator.Domain
 
         public bool Return { get; }
 
-        public Call(Object @object, MethodMember.MethodMerge methodMerge, string caller, (string property, int value)? @case, double priority, string name, string parameters, bool @return = false)
+        public Call(Object @object, MethodMember.MethodMerge methodMerge, string caller, (string subject, string property, int value)? @case, double priority, string name, string parameters, bool @return = false)
         {
             Object = @object;
             MethodMerge = methodMerge;
@@ -30,6 +30,11 @@ namespace Core.Generator.Domain
             Name = name;
             Parameters = parameters;
             Return = @return;
+        }
+
+        public string GetCode()
+        {
+            return $"{(Return ? "return " : string.Empty)}{Name}({Parameters});";
         }
     }
 }

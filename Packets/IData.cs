@@ -8,6 +8,8 @@ namespace Packets;
 [Entity("Data")]
 public interface IData
 {
+    public byte Packet { get; set; }
+
     [Size(2048)]
     public Span<byte> Value { get; }
 

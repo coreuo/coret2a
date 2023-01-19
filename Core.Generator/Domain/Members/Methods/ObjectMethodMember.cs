@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
@@ -13,7 +15,11 @@ namespace Core.Generator.Domain.Members.Methods
 
         public double? Priority { get; }
 
-        public (string method, string property, int value)? Case { get; }
+        public string Link { get; }
+
+        public override string GroupName => Link ?? base.GroupName;
+
+        public (string method, string subject, string property, int value)? Case { get; }
 
         public ObjectMethodMember(Object @object, INamedTypeSymbol @interface, IMethodSymbol original) : base(@object, @interface, original)
         {
@@ -22,14 +28,20 @@ namespace Core.Generator.Domain.Members.Methods
                 .SingleOrDefault(a => a.AttributeClass?.Name == "PriorityAttribute")
                 ?.ConstructorArguments[0].Value as double?;
 
+            Link = original
+                .GetAttributes()
+                .SingleOrDefault(a => a.AttributeClass?.Name == "LinkAttribute")
+                ?.ConstructorArguments[0].Value as string;
+
             Case = original
                 .GetAttributes()
-                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 3)
+                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 4)
                 .Select(a =>
                     a.ConstructorArguments[0].Value is string method &&
-                    a.ConstructorArguments[1].Value is string property && 
-                    a.ConstructorArguments[2].Value is int value
-                        ? ((string, string, int)?)(method, property, value)
+                    a.ConstructorArguments[1].Value is string subject &&
+                    a.ConstructorArguments[2].Value is string property && 
+                    a.ConstructorArguments[3].Value is int value
+                        ? ((string, string, string, int)?)(method, subject, property, value)
                         : null)
                 .SingleOrDefault();
         }
@@ -41,6 +53,11 @@ namespace Core.Generator.Domain.Members.Methods
             var types = new[] { Object.Name }.Concat(Interface.TypeParameters.Select(Dictionary.ResolveType));
 
             return $"{Interface.ContainingNamespace}.{root}Handlers<{string.Join(", ", types)}>";
+        }
+
+        public Call ResolveCall(ObjectMethodMerge merge, string caller, (string subject, string property, int value)? @case, ImmutableArray<(string fullType, string type, string name)> parameters)
+        {
+            return new Call(Object, merge, caller, @case, Priority ?? 0.0, $"{ResolveHandler()}.{Name}", string.Join(", ", new[] { "this" }.Concat(parameters.Select(p => $"{p.name}"))));
         }
 
         public static bool Is(IMethodSymbol original)
@@ -66,11 +83,16 @@ namespace Core.Generator.Domain.Members.Methods
             {
                 var calls = Members
                     .Where(m => !m.Original.IsAbstract && m.Priority != null)
-                    .Select(m => new Call(Object, this, Name, null, m.Priority.Value, $"{m.ResolveHandler()}.{m.Name}", string.Join(", ", new[]{"this"}.Concat(Parameters.Select(p => $"{p.name}")))));
+                    .Select(m => m.ResolveCall(this, Name, null, Parameters));
 
                 foreach (var call in calls) yield return call;
 
-                //foreach (var member in Members.Where(m => m.Case != null)) yield return new Call(Object, this, member.Priority.Value, member.Case.Value.)
+                var cases = Members
+                    .Where(m => m.Case != null && m.Priority != null)
+                    .Select(m => (m, c: m.Case.Value))
+                    .Select(p => p.m.ResolveCall(this, p.c.method, (p.c.subject, p.c.property, p.c.value), Parameters));
+
+                foreach (var @case in cases) yield return @case;
             }
         }
     }

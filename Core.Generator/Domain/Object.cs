@@ -63,8 +63,8 @@ namespace Core.Generator.Domain
                     ((INamedTypeSymbol)i.Key).GetNestedMethods()
                     .Select(p => MethodMember.Create(this, (INamedTypeSymbol)i.Key, p)))
                 .Where(m => m != null)
-                .GroupBy(m => (m.Merger, m.GroupName, m.ReturnType, m.ReturnTypeName, m.Parameters),
-                    (k, l) => k.Merger(this, k.GroupName, k.ReturnType, k.ReturnTypeName, k.Parameters, l))
+                .GroupBy(m => (m.Merger, m.GroupName, m.ReturnType, m.ReturnTypeName),
+                    (k, l) => k.Merger(this, k.GroupName, k.ReturnType, k.ReturnTypeName, l))
                 .OrderBy(m => m.Name)
                 .ToImmutableList();
         }
@@ -142,9 +142,30 @@ namespace Launcher.Domain;";
             return !MethodMembers.Any() ? string.Empty : $@"
 {string.Join(Environment.NewLine, MethodMembers.Select(m => $@"
     public {m.ResolveDeclaration()}
-    {{{string.Join(Environment.NewLine, Calls.TryGetValue(m.Name, out var calls) ? calls.Select(c => $@"
-        {(c.Return ? "return " : string.Empty)}{c.Name}({c.Parameters});") : new string[]{})}
+    {{{GetMethodBodyCode(m)}
     }}"))}";
+        }
+
+        protected virtual string GetMethodBodyCode(MethodMember.MethodMerge method)
+        {
+            if (!Calls.TryGetValue(method.Name, out var calls)) return string.Empty;
+
+            var body = calls
+                .GroupBy(c => (c.Priority, c.Case?.subject, c.Case?.property))
+                .OrderBy(g => g.Key.Priority)
+                .SelectMany(g => g.Key.property == null ? g.Select(c => $@"
+        {c.GetCode()}") : g.Select(c => $@"
+        switch({g.Key.subject}.{g.Key.property})
+        {{
+            case {c.Case?.value ?? 0}:
+            {{
+                {c.GetCode()}
+
+                break;
+            }}
+        }}"));
+
+            return string.Join(Environment.NewLine, body);
         }
 
         protected virtual string GetMetaCode()

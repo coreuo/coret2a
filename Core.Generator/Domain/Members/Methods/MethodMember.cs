@@ -19,7 +19,7 @@ namespace Core.Generator.Domain.Members.Methods
 
         public string Name { get; }
 
-        public string GroupName => Original.IsAbstract ? Name : Name.Substring(2);
+        public virtual string GroupName => Original.IsAbstract ? Name : Name.Substring(2);
 
         public string ReturnType { get; }
 
