@@ -1,10 +1,12 @@
-﻿using Core.Abstract.Attributes;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
+using Core.Abstract.Attributes;
+using Packets.Login.Features;
 
-namespace Packets.Server;
+namespace Packets.Shared;
 
 [Entity("Server")]
-public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer<TData>
+public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer<TData>,
+    IEndPoint
     where TState : IState<TData>
     where TData : IData
     where TDataConcurrentQueue : IProducerConsumerCollection<TData>
@@ -38,19 +40,10 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
 #if DEBUG
             Debug($"internal received {data.Length} bytes");
 #endif
-            var id = BeginInternalIncomingPacket(data);
+            var id = BeginIncomingInternal(data);
 
             InternalPacketReceived(data, id);
         }
-    }
-
-    [Priority(0.2)]
-    [Link("InternalPacketReceived")]
-    public void OnInternalReceivedEnd(TData data)
-    {
-        EndIncomingPacket(data);
-
-        ReleaseData(data);
     }
 
     [Priority(1.0)]
@@ -72,6 +65,27 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
         }
     }
 
+    [Priority(0.01)]
+    [Link("InternalSend")]
+    public void OnInternalSendBegin(TState state, TData data, byte id)
+    {
+        BeginOutgoingInternal(data, id);
+    }
+
+    [Priority(0.01)]
+    [Link("PacketSend")]
+    public void OnPacketSendBegin(TState state, TData data, byte id)
+    {
+        BeginOutgoingPacket(data, id);
+    }
+
+    [Priority(0.02)]
+    [Link("SendSize")]
+    public void OnSizeBegin(TState state, TData data)
+    {
+        data.OffsetSize();
+    }
+
     [Priority(0.1)]
     public void OnSeed(TState state, TData data)
     {
@@ -86,10 +100,46 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
     }
 
     [Priority(0.2)]
+    [Link("InternalPacketReceived")]
+    public void OnInternalReceivedEnd(TData data)
+    {
+        EndIncomingPacket(data);
+
+        ReleaseData(data);
+    }
+
+    [Priority(0.2)]
     [Link("PacketReceived")]
     public void OnPacketReceivedEnd(TData data)
     {
         EndIncomingPacket(data);
+    }
+
+    [Priority(0.2)]
+    [Link("InternalSend")]
+    public void OnInternalSendEnd(TState state, TData data)
+    {
+        EndOutgoingPacket(data);
+    }
+
+    [Priority(0.2)]
+    [Link("PacketSend")]
+    public void OnPacketSendEnd(TState state, TData data)
+    {
+        EndOutgoingPacket(data);
+    }
+
+    [Priority(0.3)]
+    [Link("SendSize")]
+    public void OnSizeEnd(TState state, TData data)
+    {
+        data.WriteSize((ushort)data.Length);
+    }
+
+    [Priority(2.0)]
+    public void OnPacketSend(TState state, TData data)
+    {
+        state.Send(data);
     }
 #if DEBUG
     private static void DebugIncoming(string text)

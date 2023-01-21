@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Xml.Linq;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
@@ -92,6 +91,11 @@ namespace Core.Generator.Domain.Members.Methods
                 Parameters = ResolveParameters().ToImmutableArray();
             }
 
+            public override bool HasDeclaration()
+            {
+                return Members.Any(m => m.Original.IsAbstract);
+            }
+
             private IEnumerable<(string fullType, string type, string name)> ResolveParameters()
             {
                 var parameters = Members
@@ -148,19 +152,35 @@ namespace Core.Generator.Domain.Members.Methods
                 Name = name;
                 ReturnType = returnType;
                 ReturnTypeName = returnTypeName;
-                /*Parameters = parameters
-                    .Split(',')
-                    .Where(p => p.Length > 0)
-                    .Select(p => (p, p.Split('.').Last(), $"@{p.Split('.').Last().Substring(0, 1).ToLower()}{p.Split('.').Last().Substring(1)}"))
-                    .ToImmutableArray();*/
             }
+
+            public abstract bool HasDeclaration();
 
             public virtual string ResolveDeclaration()
             {
                 return $"{ReturnType} {Name}({string.Join(", ", Parameters.Select(p => $"{p.fullType} {p.name}"))})";
             }
 
-            public abstract IEnumerable<Call> ResolveCalls();
+            public IEnumerable<Call> ResolveCalls()
+            {
+                foreach (var call in ResolveSelfCalls().Concat(ResolveOtherCalls()))
+                {
+                    call.Object = Object;
+
+                    call.MethodMerge = this;
+
+                    if (call.Caller == null) call.Caller = Name;
+
+                    yield return call;
+                }
+            }
+
+            public abstract IEnumerable<Call> ResolveSelfCalls();
+
+            public virtual IEnumerable<Call> ResolveOtherCalls()
+            {
+                yield break;
+            }
 
             public override string ToString()
             {

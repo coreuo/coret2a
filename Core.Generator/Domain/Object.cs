@@ -17,6 +17,10 @@ namespace Core.Generator.Domain
 
         public ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> Dictionary { get; }
 
+        public ImmutableList<INamedTypeSymbol> Interfaces { get; }
+
+        public ImmutableList<INamedTypeSymbol> Handlers { get; }
+
         public IImmutableList<PropertyMember.PropertyMerge> PropertyMembers { get; set; }
 
         public IImmutableList<MethodMember.MethodMerge> MethodMembers { get; set; }
@@ -32,6 +36,8 @@ namespace Core.Generator.Domain
             Root = root;
             Name = name;
             Dictionary = dictionary;
+            Interfaces = Dictionary.Keys.OfType<INamedTypeSymbol>().Where(c => c.TypeKind == TypeKind.Interface).ToImmutableList();
+            Handlers = Dictionary.Keys.OfType<INamedTypeSymbol>().Where(c => c.IsStatic && c.TypeKind == TypeKind.Class).ToImmutableList();
         }
 
         public static Object Create(Root root, string name,
@@ -48,20 +54,24 @@ namespace Core.Generator.Domain
 
         public void AssignMembers()
         {
-            PropertyMembers = Dictionary
-                .SelectMany(i =>
-                    ((INamedTypeSymbol)i.Key).GetNestedProperties()
-                    .Select(p => PropertyMember.Create(this, (INamedTypeSymbol)i.Key, p)))
+            PropertyMembers = Interfaces
+                .SelectMany(i => i
+                    .GetNestedProperties()
+                    .Select(p => PropertyMember.Create(this, i, p)))
                 .Where(m => m != null)
                 .GroupBy(m => (m.Merger, m.Original.Name, m.Type, m.TypeName),
                     (k, l) => k.Merger(this, k.Name, k.Type, k.TypeName, l))
                 .OrderBy(m => m.Name)
                 .ToImmutableList();
 
-            MethodMembers = Dictionary
-                .SelectMany(i =>
-                    ((INamedTypeSymbol)i.Key).GetNestedMethods()
-                    .Select(p => MethodMember.Create(this, (INamedTypeSymbol)i.Key, p)))
+            MethodMembers = Interfaces
+                .SelectMany(i => i
+                    .GetNestedMethods().Where(m => m.IsAbstract)
+                    .Select(p => MethodMember.Create(this, i, p)))
+                .Concat(Handlers
+                    .SelectMany(h => h
+                        .GetNestedMethods().Where(m => m.IsStatic)
+                        .Select(p => MethodMember.Create(this, h, p))))
                 .Where(m => m != null)
                 .GroupBy(m => (m.Merger, m.GroupName, m.ReturnType, m.ReturnTypeName),
                     (k, l) => k.Merger(this, k.GroupName, k.ReturnType, k.ReturnTypeName, l))
@@ -118,8 +128,8 @@ namespace Launcher.Domain;";
 
         protected virtual string GetInheritanceCode()
         {
-            var inheritance = Dictionary
-                .Select(i => ((INamedTypeSymbol)i.Key).ResolveTypeParameters(p => i.Value[p]));
+            var inheritance = Interfaces
+                .Select(i => i.ResolveTypeParameters(p => Dictionary[i][p]));
 
             return $@",
     {string.Join(@",
@@ -140,7 +150,7 @@ namespace Launcher.Domain;";
         protected virtual string GetMethodsCode()
         {
             return !MethodMembers.Any() ? string.Empty : $@"
-{string.Join(Environment.NewLine, MethodMembers.Select(m => $@"
+{string.Join(Environment.NewLine, MethodMembers.Where(m => m.HasDeclaration()).Select(m => $@"
     public {m.ResolveDeclaration()}
     {{{GetMethodBodyCode(m)}
     }}"))}";
@@ -150,7 +160,17 @@ namespace Launcher.Domain;";
         {
             if (!Calls.TryGetValue(method.Name, out var calls)) return string.Empty;
 
-            var body = calls
+            var declaredParameters = method.Parameters.ToImmutableHashSet();
+
+            var leasing = calls
+                .Where(c => c.MethodMerge is ObjectMethodMember.ObjectMethodMerge)
+                .SelectMany(c => c.Parameters.Skip(1).Where(p => c.Also.parameter != p.name))
+                .Where(p => !declaredParameters.Contains(p))
+                .Distinct()
+                .Select(p => $@"
+        {p.type} {p.name} = Save.{p.type}Store.Lease();");
+
+            var groups = calls
                 .GroupBy(c => (c.Priority, c.Case.subject, c.Case.property))
                 .OrderBy(g => g.Key.Priority)
                 .Select(g => g.Key.property == null ? string.Join(Environment.NewLine, g.Select(c => $@"
@@ -165,7 +185,7 @@ namespace Launcher.Domain;";
             }}"))}
         }}");
 
-            return string.Join(Environment.NewLine, body);
+            return string.Join(Environment.NewLine, leasing.Concat(groups));
         }
 
         protected virtual string GetMetaCode()

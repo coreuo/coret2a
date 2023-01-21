@@ -1,11 +1,12 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Server.Features;
 using Packets.Shard.Features;
+using Packets.Shared;
+using Packets.Shared.Features;
 
-namespace Packets.Shard;
+namespace Packets.Shard.Domain;
 
 [Entity("Shard", "State")]
-public interface IState<TData, out TAccount, out TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> : Server.IState<TData>,
+public interface IState<TData, out TAccount, out TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> : IState<TData>,
     IAccessKey,
     ICharacterSlot,
     ITipRequest,

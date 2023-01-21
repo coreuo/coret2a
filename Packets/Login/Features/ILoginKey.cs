@@ -1,4 +1,6 @@
-﻿namespace Packets.Login.Features;
+﻿using Packets.Shared;
+
+namespace Packets.Login.Features;
 
 public interface ILoginKey
 {

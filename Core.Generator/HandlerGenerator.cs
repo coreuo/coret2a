@@ -16,7 +16,7 @@ namespace Core.Generator
 
         public void Execute(GeneratorExecutionContext context)
         {
-            var interfaces = context.Compilation.Assembly.GetEntityAndElementInterfaces();
+            var interfaces = context.Compilation.Assembly.GetEntityAndElementConstructs().Where(c => c.TypeKind == TypeKind.Interface);
 
             foreach (var (name, content) in interfaces.GroupBy(i => ($"{i.ContainingNamespace}", i.Name.Substring(1, i.Name.Length - 1))).Select(g => CreateHandlersFile(context.Compilation.Assembly, g.Key, g)))
             {
@@ -53,6 +53,7 @@ namespace {labels.@namespace};
             var handlers = @interface.GetNestedMethods().Where(m => !m.IsAbstract).Select(m => m.ResolveEntityMethodHandlerDefinition(rootType, rootName));
 
             var @class = $@"
+{string.Join(Environment.NewLine, @interface.GetAttributes().Select(a => $"[{a}]"))}
 public static class {root}Handlers<{string.Join(", ", types)}>{string.Join(string.Empty, constraints)}
 {{{string.Join(Environment.NewLine, handlers)}
 }}";

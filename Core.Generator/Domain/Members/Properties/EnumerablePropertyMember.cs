@@ -7,7 +7,7 @@ namespace Core.Generator.Domain.Members.Properties
 {
     public abstract class EnumerablePropertyMember : PropertyMember
     {
-        public AttributeData SizeAttribute { get; }
+        public AttributeData LengthAttribute { get; }
 
         public INamedTypeSymbol Enumerable { get; }
 
@@ -15,7 +15,7 @@ namespace Core.Generator.Domain.Members.Properties
 
         protected EnumerablePropertyMember(Object @object, INamedTypeSymbol @interface, IPropertySymbol original) : base(@object, @interface, original)
         {
-            SizeAttribute = original.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "SizeAttribute");
+            LengthAttribute = original.GetAttributes().SingleOrDefault(a => a.IsAttribute("LengthAttribute"));
 
             Enumerable = (INamedTypeSymbol)((ITypeParameterSymbol)original.Type).ConstraintTypes[0];
 
@@ -29,7 +29,7 @@ namespace Core.Generator.Domain.Members.Properties
 
         public override string ToString()
         {
-            return $"[{SizeAttribute}] {Original.Type} {Original.Name} of {Interface}";
+            return $"[{LengthAttribute}] {Original.Type} {Original.Name} of {Interface}";
         }
 
         public abstract class EnumerablePropertyMerge<T> : PropertyMerge<T>
@@ -37,7 +37,7 @@ namespace Core.Generator.Domain.Members.Properties
         {
             public Object Item { get; }
 
-            public int Size { get; }
+            public int Length { get; }
 
             protected EnumerablePropertyMerge(Object @object, string name, string type, string typeName, IEnumerable<T> members) : base(@object, name, type, typeName, members)
             {
@@ -48,10 +48,10 @@ namespace Core.Generator.Domain.Members.Properties
 
                 Item = Object.Root.Objects[parameter];
 
-                Size = Members
-                    .Where(m => m.SizeAttribute != null)
-                    .Where(m => m.SizeAttribute.ConstructorArguments.Length == 1)
-                    .Select(m => m.SizeAttribute.ConstructorArguments[0].Value)
+                Length = Members
+                    .Where(m => m.LengthAttribute != null)
+                    .Where(m => m.LengthAttribute.ConstructorArguments.Length == 1)
+                    .Select(m => m.LengthAttribute.ConstructorArguments[0].Value)
                     .OfType<int>()
                     .Distinct()
                     .SingleOrDefault();

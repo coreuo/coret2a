@@ -1,6 +1,6 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Packets.Shard;
+namespace Packets.Shard.Domain;
 
 [Element("Skill")]
 public interface ISkill

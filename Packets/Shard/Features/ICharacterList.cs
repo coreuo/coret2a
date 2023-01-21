@@ -1,4 +1,7 @@
-﻿namespace Packets.Shard.Features;
+﻿using Packets.Shard.Domain;
+using Packets.Shared;
+
+namespace Packets.Shard.Features;
 
 public interface ICharacterList<TCharacter, out TCharacterCollection>
     where TCharacter : IMobile

@@ -38,13 +38,13 @@ namespace Core.Generator.Domain
 
         private IEnumerable<Object> CreateObjects()
         {
-            var assemblies = Context.Compilation.GetReferencedAssemblies();
+            var assemblies = Context.Compilation.GetReferencedAssemblies().ToImmutableList();
 
-            var interfaces = assemblies
-                .SelectMany(EntityExtensions.GetEntityAndElementInterfaces)
-                .ToList();
+            var constructs = assemblies
+                .SelectMany(EntityExtensions.GetEntityAndElementConstructs)
+                .ToImmutableList();
 
-            var implementations = interfaces
+            var implementations = constructs
                 .GroupBy(g => g.GetSubject(), (k, l) => (k, l.ToImmutableList()))
                 .Select(g => new
                 {
@@ -54,7 +54,7 @@ namespace Core.Generator.Domain
                         .GroupBy(i => i.GetVariant(), (m, n) => new
                         {
                             Variant = m,
-                            Interfaces = n
+                            Constructs = n
                         }),
                     General = g.Item2.Where(i => !i.HasVariant())
                 })
@@ -70,10 +70,10 @@ namespace Core.Generator.Domain
                 var subject = implementation.Subject;
 
                 if (generalSubjects.Contains(subject))
-                    yield return Object.Create(this, subject, implementation.General.ResolveInterfaceDictionary(subject, generalSubjects));
+                    yield return Object.Create(this, subject, implementation.General.ResolveConstructDictionary(subject, generalSubjects));
                 else
                     foreach (var category in implementation.Categories)
-                        yield return Object.Create(this, $"{category.Variant}{subject}", category.Interfaces.Concat(implementation.General).ResolveInterfaceDictionary($"{category.Variant}{subject}", generalSubjects, category.Variant));
+                        yield return Object.Create(this, $"{category.Variant}{subject}", category.Constructs.Concat(implementation.General).ResolveConstructDictionary($"{category.Variant}{subject}", generalSubjects, category.Variant));
             }
         }
 

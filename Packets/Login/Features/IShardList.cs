@@ -1,4 +1,7 @@
-﻿namespace Packets.Login.Features;
+﻿using Packets.Login.Domain;
+using Packets.Shared;
+
+namespace Packets.Login.Features;
 
 public interface IShardList<TShard, out TShardCollection>
     where TShard : IShard

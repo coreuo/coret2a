@@ -1,6 +1,7 @@
 ﻿using Core.Abstract.Attributes;
+using Packets.Shared;
 
-namespace Packets.Shard;
+namespace Packets.Shard.Domain;
 
 [Entity("Login", "Server")]
 public interface ILogin<in TData>

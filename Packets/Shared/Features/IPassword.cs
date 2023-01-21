@@ -1,10 +1,10 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Packets.Server.Features;
+namespace Packets.Shared.Features;
 
 public interface IPassword
 {
-    [Size(30)] Span<char> Password { get; }
+    [Length(30)] Span<char> Password { get; }
 
     internal void ReadPassword<TData>(TData data)
         where TData : IData

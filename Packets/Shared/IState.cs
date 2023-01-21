@@ -1,6 +1,6 @@
 ﻿using Core.Abstract.Attributes;
 
-namespace Packets.Server;
+namespace Packets.Shared;
 
 [Entity("State")]
 public interface IState<TData> : ISeed

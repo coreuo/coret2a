@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
 namespace Core.Generator.Domain.Members.Properties
@@ -11,13 +12,13 @@ namespace Core.Generator.Domain.Members.Properties
 
         public override PropertyMergeDelegate Merger => PropertyMergeFactory;
 
-        public AttributeData SizeAttribute { get; }
+        public AttributeData LengthAttribute { get; }
 
         public ITypeSymbol GenericType { get; }
 
         public SpanPropertyMember(Object @object, INamedTypeSymbol @interface, IPropertySymbol original) : base(@object, @interface, original)
         {
-            SizeAttribute = original.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "SizeAttribute");
+            LengthAttribute = original.GetAttributes().SingleOrDefault(a => a.IsAttribute("LengthAttribute"));
 
             GenericType = ((INamedTypeSymbol)original.Type).TypeArguments[0];
         }
@@ -29,14 +30,14 @@ namespace Core.Generator.Domain.Members.Properties
 
         public override string ToString()
         {
-            return $"[{SizeAttribute}] {Original.Type} {Original.Name} of {Interface}";
+            return $"[{LengthAttribute}] {Original.Type} {Original.Name} of {Interface}";
         }
 
         public class SpanPropertyMerge : PropertyMerge<SpanPropertyMember>
         {
             public ISymbol GenericType { get; }
 
-            public int Size { get; }
+            public int Length { get; }
 
             public Property Property { get; private set; }
 
@@ -49,17 +50,17 @@ namespace Core.Generator.Domain.Members.Properties
                     .Select(g => g.First())
                     .ToImmutableArray();
 
-                var sizedSource = source
-                    .Where(m => m.SizeAttribute != null)
-                    .Where(m => m.SizeAttribute.ConstructorArguments.Length == 1)
+                var lengthSource = source
+                    .Where(m => m.LengthAttribute != null)
+                    .Where(m => m.LengthAttribute.ConstructorArguments.Length == 1)
                     .ToImmutableArray();
 
-                var sizes = sizedSource
-                    .Select(m => m.SizeAttribute.ConstructorArguments[0].Value)
+                var lengths = lengthSource
+                    .Select(m => m.LengthAttribute.ConstructorArguments[0].Value)
                     .OfType<int>()
                     .ToImmutableArray();
 
-                if (!sizes.Any())
+                if (!lengths.Any())
                 {
                     foreach (var member in source)
                     {
@@ -67,8 +68,8 @@ namespace Core.Generator.Domain.Members.Properties
                             Diagnostic.Create(
                                 new DiagnosticDescriptor(
                                     "LG0002",
-                                    "Span size attribute is missing",
-                                    "Span size attribute is missing {0}",
+                                    "Span length attribute is missing",
+                                    "Span length attribute is missing {0}",
                                     "Attributes",
                                     DiagnosticSeverity.Error,
                                     true),
@@ -76,16 +77,16 @@ namespace Core.Generator.Domain.Members.Properties
                                 $"{member.Original}"));
                     }
                 }
-                else if (sizes.Length > 1)
+                else if (lengths.Length > 1)
                 {
-                    foreach (var member in sizedSource)
+                    foreach (var member in lengthSource)
                     {
                         Object.Root.Context.ReportDiagnostic(
                             Diagnostic.Create(
                                 new DiagnosticDescriptor(
                                     "LG0003",
-                                    "Multiple span size attributes",
-                                    "Multiple span size attributes detected {0}",
+                                    "Multiple span length attributes",
+                                    "Multiple span length attributes detected {0}",
                                     "Attributes",
                                     DiagnosticSeverity.Error,
                                     true),
@@ -94,17 +95,17 @@ namespace Core.Generator.Domain.Members.Properties
                     }
                 }
 
-                Size = sizes.Single();
+                Length = lengths.Single();
             }
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetSpan<{Object.Name}, {GenericType}>({ResolveOffset(Property)}, {Size});";
+                return $"get => this.GetSpan<{Object.Name}, {GenericType}>({ResolveOffset(Property)}, {Length});";
             }
 
             public override string ResolveSize()
             {
-                return $"{Size} * sizeof({GenericType})";
+                return $"{Length} * sizeof({GenericType})";
             }
 
             public override IEnumerable<Property> ResolveProperties()

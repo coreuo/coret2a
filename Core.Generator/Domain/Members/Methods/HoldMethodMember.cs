@@ -28,9 +28,9 @@ namespace Core.Generator.Domain.Members.Methods
             {
             }
 
-            public override IEnumerable<Call> ResolveCalls()
+            public override IEnumerable<Call> ResolveSelfCalls()
             {
-                yield return new Call(Object, this, Name, default, 0, $"Save.{Parameters.Single().type}Store.Hold", Parameters.Single().name);
+                yield return new Call($"Save.{Parameters.Single().type}Store.Hold", Parameters);
             }
         }
     }

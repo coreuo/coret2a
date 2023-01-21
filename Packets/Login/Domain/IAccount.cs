@@ -1,8 +1,8 @@
 ﻿using Core.Abstract.Attributes;
 using Packets.Login.Features;
-using Packets.Server.Features;
+using Packets.Shared.Features;
 
-namespace Packets.Login;
+namespace Packets.Login.Domain;
 
 [Entity("Login", "Account")]
 public interface IAccount :

@@ -1,4 +1,6 @@
-﻿namespace Packets.Shard.Features;
+﻿using Packets.Shared;
+
+namespace Packets.Shard.Features;
 
 public interface IPattern
 {

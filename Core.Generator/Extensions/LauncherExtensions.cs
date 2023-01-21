@@ -12,7 +12,7 @@ namespace Core.Generator.Extensions
 
         public static bool IsLauncherAttribute(this AttributeData attribute)
         {
-            return attribute.AttributeClass?.Name == "LauncherAttribute";
+            return attribute.IsAttribute("LauncherAttribute");
         }
     }
 }

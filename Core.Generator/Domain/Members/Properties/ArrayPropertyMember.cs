@@ -29,12 +29,12 @@ namespace Core.Generator.Domain.Members.Properties
 
             public override string ResolveGetter()
             {
-                return $"get => this.GetArray<Save, {Object.Name}, {Item.Name}>({ResolveOffset(Property)}, {Size});";
+                return $"get => this.GetArray<Save, {Object.Name}, {Item.Name}>({ResolveOffset(Property)}, {Length});";
             }
 
             public override string ResolveSize()
             {
-                return $"{Size} * {Item.Name}.Size";
+                return $"{Length} * {Item.Name}.Size";
             }
 
             public override IEnumerable<Property> ResolveProperties()

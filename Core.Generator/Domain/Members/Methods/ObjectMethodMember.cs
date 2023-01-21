@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
+using System.Reflection.Metadata;
 using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
@@ -21,52 +21,74 @@ namespace Core.Generator.Domain.Members.Methods
 
         public (string method, string subject, string property, int value) Case { get; }
 
+        public ImmutableArray<(string method, string parameter, int value)> Also { get; }
+
         public ObjectMethodMember(Object @object, INamedTypeSymbol @interface, IMethodSymbol original) : base(@object, @interface, original)
         {
-            Priority = original
-                .GetAttributes()
-                .SingleOrDefault(a => a.AttributeClass?.Name == "PriorityAttribute")
+            var attributes = original.GetAttributes();
+
+            Priority = attributes
+                .SingleOrDefault(a => a.IsAttribute("PriorityAttribute"))
                 ?.ConstructorArguments[0].Value as double?;
 
-            Link = original
-                .GetAttributes()
-                .SingleOrDefault(a => a.AttributeClass?.Name == "LinkAttribute")
+            Link = attributes
+                .SingleOrDefault(a => a.IsAttribute("LinkAttribute"))
                 ?.ConstructorArguments[0].Value as string;
 
-            Case = original
-                .GetAttributes()
-                .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 3)
-                .Select(a =>
-                    a.ConstructorArguments[0].Value is string method &&
-                    a.ConstructorArguments[1].Value is string property && 
-                    a.ConstructorArguments[2].Value is int value
-                        ? (method, (string)null, property, value)
-                        : default)
-                .Concat(original
-                    .GetAttributes()
-                    .Where(a => a.AttributeClass?.Name == "CaseAttribute" && a.ConstructorArguments.Length == 4)
-                    .Select(a =>
-                        a.ConstructorArguments[0].Value is string method &&
-                        a.ConstructorArguments[1].Value is string subject &&
-                        a.ConstructorArguments[2].Value is string property &&
-                        a.ConstructorArguments[3].Value is int value
-                            ? (method, subject, property, value)
-                            : default))
+            Case = attributes
+                .Where(a => a.IsAttribute("CaseAttribute") && a.ConstructorArguments.Length == 4)
+                .Select(a => a.ConstructorArguments[3].Value is int value
+                    ? (a.ConstructorArguments[0].Value as string,
+                        a.ConstructorArguments[1].Value as string,
+                        a.ConstructorArguments[2].Value as string,
+                        value)
+                    : default)
                 .SingleOrDefault();
+
+            Also = attributes
+                .Where(a => a.IsAttribute("AlsoAttribute") && a.ConstructorArguments.Length == 3)
+                .Select(a => a.ConstructorArguments[2].Value is int value
+                    ? (a.ConstructorArguments[0].Value as string,
+                        a.ConstructorArguments[1].Value as string,
+                        value)
+                    : default)
+                .ToImmutableArray();
         }
 
         public string ResolveHandler()
         {
-            var root = Interface.Name.Substring(1, Interface.Name.Length - 1);
+            var types = Interface.TypeParameters.Select(Dictionary.ResolveType);
 
-            var types = new[] { Object.Name }.Concat(Interface.TypeParameters.Select(Dictionary.ResolveType));
-
-            return $"{Interface.ContainingNamespace}.{root}Handlers<{string.Join(", ", types)}>";
+            return $"{Interface.ContainingNamespace}.{Interface.Name}<{string.Join(", ", types)}>";
         }
 
-        public Call ResolveCall(ObjectMethodMerge merge, string caller, (string subject, string property, int value) @case, IEnumerable<(string fullType, string type, string name)> parameters)
+        public IEnumerable<Call> ResolveCalls(IEnumerable<(string fullType, string type, string name)> parameters)
         {
-            return new Call(Object, merge, caller, @case, Priority ?? 0.0, $"{ResolveHandler()}.{Name}", string.Join(", ", new[] { "this" }.Concat(parameters.Select(p => $"{p.name}"))));
+            yield return new Call(Priority ?? 0.0, $"{ResolveHandler()}.{Name}", new[] { (Object.Name, Object.Name, "this") }.Concat(parameters.Skip(1)));
+
+            foreach (var call in ResolveAdditionalCalls()) yield return call;
+        }
+
+        public IEnumerable<Call> ResolveAdditionalCalls()
+        {
+            var additional = Also.Select(c => new
+            {
+                Also = c,
+                Calls = Object.MethodMembers
+                    .OfType<ObjectMethodMerge>()
+                    .Where(m => m.Name == c.method)
+                    .SelectMany(m => m.ResolveSelfCalls())
+            });
+
+            foreach (var item in additional)
+            {
+                foreach (var call in item.Calls)
+                {
+                    call.Also = (item.Also.parameter, item.Also.value);
+
+                    yield return call;
+                }
+            }
         }
 
         public static bool Is(IMethodSymbol original)
@@ -77,7 +99,7 @@ namespace Core.Generator.Domain.Members.Methods
                          (original.IsAbstract ||
                           !original.IsAbstract &&
                           original.Name.StartsWith("On") &&
-                          attributes.Any(a => a.AttributeClass?.Name == "PriorityAttribute"));
+                          attributes.Any(a => a.IsAttribute("PriorityAttribute")));
 
             return result;
         }
@@ -88,29 +110,40 @@ namespace Core.Generator.Domain.Members.Methods
             {
             }
 
-            public override IEnumerable<Call> ResolveCalls()
+            public override IEnumerable<Call> ResolveSelfCalls()
             {
                 var calls = Members
                     .Where(m => !m.Original.IsAbstract && m.Priority != null)
-                    .Select(m => m.ResolveCall(this, Name, default, ResolveParameters(m)));
+                    .SelectMany(m => m.ResolveCalls(ResolveParameters(m)));
 
-                foreach (var call in calls) yield return call;
+                foreach (var call in calls)
+                {
+                    call.Caller = Name;
 
-                var cases = Members
+                    yield return call;
+                }
+            }
+
+            public override IEnumerable<Call> ResolveOtherCalls()
+            {
+                var calls = Members
                     .Where(m => m.Case != default && m.Priority != null)
                     .Select(m => (m, c: m.Case))
                     .SelectMany(p => ResolveCaseCall(p.c));
 
-                foreach (var @case in cases) yield return @case;
+                foreach (var call in calls) yield return call;
             }
 
             private IEnumerable<Call> ResolveCaseCall((string method, string subject, string property, int value) @case)
             {
-                var calls = Members
-                    .Where(m => !m.Original.IsAbstract && m.Priority != null)
-                    .Select(m => m.ResolveCall(this, @case.method, (@case.subject, @case.property, @case.value), ResolveParameters(m)));
+                foreach (var call in ResolveSelfCalls())
+                {
+                    call.Caller = @case.method;
 
-                foreach (var call in calls) yield return call;
+                    call.Case = (@case.subject, @case.property, @case.value);
+
+                    yield return call;
+                }
             }
         }
     }

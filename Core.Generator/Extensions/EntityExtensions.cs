@@ -8,9 +8,9 @@ namespace Core.Generator.Extensions
 {
     public static class EntityExtensions
     {
-        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveInterfaceDictionary(this IEnumerable<INamedTypeSymbol> interfaces, string name, ImmutableHashSet<string> generalSubjects, string variant = null)
+        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveConstructDictionary(this IEnumerable<INamedTypeSymbol> constructs, string name, ImmutableHashSet<string> generalSubjects, string variant = null)
         {
-            return interfaces.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityOrElementParameter(name, variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
+            return constructs.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityOrElementParameter(name, variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
         }
 
         public static string ResolveEntityOrElementParameter(this ITypeParameterSymbol parameter, string name, string parentVariant, ImmutableHashSet<string> generalSubjects)
@@ -57,7 +57,7 @@ namespace Core.Generator.Extensions
             return result;
         }
 
-        public static IEnumerable<INamedTypeSymbol> GetEntityAndElementInterfaces(this IAssemblySymbol assembly)
+        public static IEnumerable<INamedTypeSymbol> GetEntityAndElementConstructs(this IAssemblySymbol assembly)
         {
             return assembly.GlobalNamespace.FindRecursive(HasEntityAttribute).Concat(assembly.GlobalNamespace.FindRecursive(HasElementAttribute)).ToList();
         }
@@ -103,6 +103,11 @@ namespace Core.Generator.Extensions
             return symbol.GetAttributes().Any(IsElementAttribute);
         }
 
+        public static bool HasHandlersAttribute(this INamedTypeSymbol symbol)
+        {
+            return symbol.GetAttributes().Any(IsHandlersAttribute);
+        }
+
         public static AttributeData GetEntityAttribute(this INamedTypeSymbol symbol)
         {
             return symbol.GetAttributes().Single(IsEntityAttribute);
@@ -115,17 +120,27 @@ namespace Core.Generator.Extensions
 
         public static bool IsEntityAttribute(this AttributeData attribute)
         {
-            return attribute.AttributeClass?.Name == "EntityAttribute";
+            return attribute.IsAttribute("EntityAttribute");
         }
 
         public static bool IsElementAttribute(this AttributeData attribute)
         {
-            return attribute.AttributeClass?.Name == "ElementAttribute";
+            return attribute.IsAttribute("ElementAttribute");
+        }
+
+        public static bool IsHandlersAttribute(this AttributeData attribute)
+        {
+            return attribute.IsAttribute("HandlersAttribute");
         }
 
         public static bool IsSynchronizedAttribute(this AttributeData attribute)
         {
-            return attribute.AttributeClass?.Name == "SynchronizedAttribute";
+            return attribute.IsAttribute("SynchronizedAttribute");
+        }
+
+        public static bool IsAttribute(this AttributeData attribute, string name)
+        {
+            return attribute.AttributeClass != null && attribute.AttributeClass.Name.EndsWith(name);
         }
 
         public static bool IsProducerConsumerCollection(this INamedTypeSymbol symbol)

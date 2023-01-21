@@ -1,9 +1,21 @@
-﻿namespace Packets;
+﻿namespace Packets.Shared;
 
 public interface ITransfer<TData>
     where TData : IData
 {
-    TData LeaseData();
+    internal byte BeginIncomingInternal(TData data)
+    {
+        var id = data.BeginRead();
+#if DEBUG
+        DebugInternalIncoming(id);
+#endif
+        return id;
+    }
+
+    internal void EndIncomingInternal(TData data)
+    {
+        data.ReadEnd();
+    }
 
     internal byte BeginIncomingPacket(TData data)
     {
@@ -14,64 +26,37 @@ public interface ITransfer<TData>
         return id;
     }
 
-    internal byte BeginInternalIncomingPacket(TData data)
-    {
-        var id = data.BeginRead();
-#if DEBUG
-        DebugInternalIncoming(id);
-#endif
-        return id;
-    }
-
     internal void EndIncomingPacket(TData data)
     {
         data.ReadEnd();
     }
 
-    internal TData BeginOutgoingPacket(byte id)
+    internal TData BeginOutgoingInternal(TData data, byte id)
+    {
+#if DEBUG
+        DebugInternalOutgoing(id);
+#endif
+        data.BeginWrite(id);
+
+        return data;
+    }
+
+    internal void EndOutgoingInternal(TData data)
+    {
+        data.EndWrite();
+    }
+
+    internal TData BeginOutgoingPacket(TData data, byte id)
     {
 #if DEBUG
         DebugOutgoing(id);
 #endif
-        var data = LeaseData();
-
         data.BeginWrite(id);
 
         return data;
     }
 
     internal void EndOutgoingPacket(TData data)
-    {
-        var size = data.EndWrite();
-
-        data.WriteSize((short)size);
-    }
-
-    internal TData BeginOutgoingNoSizePacket(byte id)
-    {
-#if DEBUG
-        DebugOutgoing(id);
-#endif
-        var data = LeaseData();
-
-        data.BeginWriteNoSize(id);
-
-        return data;
-    }
-
-    internal TData BeginInternalOutgoingNoSizePacket(byte id)
-    {
-#if DEBUG
-        DebugInternalOutgoing(id);
-#endif
-        var data = LeaseData();
-
-        data.BeginWriteNoSize(id);
-
-        return data;
-    }
-
-    internal void EndOutgoingNoSizePacket(TData data)
     {
         data.EndWrite();
     }

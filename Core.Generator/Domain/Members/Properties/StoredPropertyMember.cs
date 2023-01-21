@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Core.Generator.Extensions;
 using Microsoft.CodeAnalysis;
 
 namespace Core.Generator.Domain.Members.Properties
@@ -15,7 +16,7 @@ namespace Core.Generator.Domain.Members.Properties
 
         public StoredPropertyMember(Object @object, INamedTypeSymbol @interface, IPropertySymbol original) : base(@object, @interface, original)
         {
-            LinkAttribute = original.GetAttributes().SingleOrDefault(a => a.AttributeClass?.Name == "LinkAttribute");
+            LinkAttribute = original.GetAttributes().SingleOrDefault(a => a.IsAttribute("LinkAttribute"));
         }
 
         public static bool Is(IPropertySymbol original)

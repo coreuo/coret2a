@@ -3,14 +3,14 @@ using System.Text;
 using Core.Abstract.Attributes;
 using Core.Abstract.Extensions;
 
-namespace Packets;
+namespace Packets.Shared;
 
 [Entity("Data")]
 public interface IData
 {
     public byte Packet { get; set; }
 
-    [Size(2048)]
+    [Length(2048)]
     public Span<byte> Value { get; }
 
     public int Start { get; set; }
@@ -130,16 +130,12 @@ public interface IData
 
         Value[0] = value;
 
-        Offset = 3;
+        Offset = 1;
     }
 
-    internal void BeginWriteNoSize(byte value)
+    internal void OffsetSize()
     {
-        Start = 0;
-
-        Value[0] = value;
-
-        Offset = 1;
+        Offset = 3;
     }
 
     internal void WriteByte(byte value)
@@ -194,7 +190,7 @@ public interface IData
         Offset += 2;
     }
 
-    internal void WriteSize(short value)
+    internal void WriteSize(ushort value)
     {
         Value[Start + 1] = (byte)(value >> 8);
         Value[Start + 2] = (byte)value;

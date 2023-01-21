@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Core.Abstract.Extensions;
-using Packets.Server.Features;
+using Packets.Shared;
+using Packets.Shared.Features;
 
 namespace Packets.Login.Features;
 

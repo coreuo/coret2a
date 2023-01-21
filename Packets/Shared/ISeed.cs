@@ -1,4 +1,4 @@
-﻿namespace Packets;
+﻿namespace Packets.Shared;
 
 public interface ISeed
 {

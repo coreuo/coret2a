@@ -1,40 +1,45 @@
-﻿using Core.Generator.Domain.Members.Methods;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using Core.Generator.Domain.Members.Methods;
 
 namespace Core.Generator.Domain
 {
     public class Call
     {
-        public Object Object { get; }
+        public Object Object { get; set; }
 
-        public MethodMember.MethodMerge MethodMerge { get; }
+        public MethodMember.MethodMerge MethodMerge { get; set; }
 
-        public string Caller { get; }
+        public string Caller { get; set; }
 
-        public (string subject, string property, int value) Case { get; }
+        public (string subject, string property, int value) Case { get; set; }
+
+        public (string parameter, int value) Also { get; set; }
 
         public double Priority { get; }
 
         public string Name { get; }
 
-        public string Parameters { get; }
+        public ImmutableArray<(string fullType, string type, string name)> Parameters { get; }
 
         public bool Return { get; }
 
-        public Call(Object @object, MethodMember.MethodMerge methodMerge, string caller, (string subject, string property, int value) @case, double priority, string name, string parameters, bool @return = false)
+        public Call(string name, IEnumerable<(string fullType, string type, string name)> parameters, bool @return = false)
         {
-            Object = @object;
-            MethodMerge = methodMerge;
-            Caller = caller;
-            Case = @case;
-            Priority = priority;
             Name = name;
-            Parameters = parameters;
+            Parameters = parameters.ToImmutableArray();
             Return = @return;
+        }
+
+        public Call(double priority, string name, IEnumerable<(string fullType, string type, string name)> parameters, bool @return = false) : this(name, parameters, @return)
+        {
+            Priority = priority;
         }
 
         public string GetCode()
         {
-            return $"{(Return ? "return " : string.Empty)}{Name}({Parameters});";
+            return $"{(Return ? "return " : string.Empty)}{Name}({string.Join(", ", Parameters.Select(p => p.name == Also.parameter ? $"{Also.value}" : $"{p.name}"))});";
         }
     }
 }
