@@ -1,41 +1,10 @@
-﻿using Core.Abstract.Attributes;
-using Packets.Attributes.Outgoing;
-using Packets.Shard.Domain;
-using Packets.Shard.Features;
-using Packets.Shared;
-using Packets.Shared.Features;
+﻿using Packets.Attributes.Outgoing;
 
-namespace Packets.Shard;
+// ReSharper disable once CheckNamespace
+namespace Packets.Shard.Domain;
 
-[Entity("Shard", "Server")]
-public interface IOutgoing<in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> :
-    ITransfer<TData>,
-    ICityList,
-    IGameTime,
-    IName,
-    IPassword,
-    IAccessKey
-    where TState : IState<TData, TAccount, TMobile, TMobileCollection, TMap, TSkill, TSkillArray>
-    where TData : IData
-    where TAccount : IAccount<TMobile, TMobileCollection>
-    where TMobile : IMobile<TMap, TSkill, TSkillArray>
-    where TMobileCollection : ICollection<TMobile>
-    where TMap : IMap
-    where TSkill : ISkill
-    where TSkillArray : IReadOnlyList<TSkill>
+public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray>
 {
-    [InternalLoginPacket(0x01)]
-    public void OnInternalShardAccountOnline(TState state, TData data)
-    {
-        state.Account.WriteName(data);
-    }
-
-    [InternalLoginPacket(0x02)]
-    public void OnInternalShardAccountOffline(TState state, TData data)
-    {
-        state.Account.WriteName(data);
-    }
-
     [Packet(0x11)]
     [Sized]
     public void OnPacketMobileStatus(TState state, TData data)

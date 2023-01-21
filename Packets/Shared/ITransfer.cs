@@ -76,9 +76,9 @@ public interface ITransfer<TData>
         switch (packetId)
         {
             // ReSharper disable StringLiteralTypo
-            case 0x00: return "0x00 INTERNAL_SHARD_AUTHORIZATION";
-            case 0x01: return "0x01 INTERNAL_SHARD_ACCOUNT_ONLINE";
-            case 0x02: return "0x02 INTERNAL_SHARD_ACCOUNT_OFFLINE";
+            case 0x00: return "0x00 INTERNAL_AUTHORIZATION";
+            case 0x01: return "0x01 INTERNAL_ACCOUNT_ONLINE";
+            case 0x02: return "0x02 INTERNAL_ACCOUNT_OFFLINE";
             default: return $"0x{packetId:X2} INVALID INTERNAL";
         }
     }

@@ -103,7 +103,7 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
     [Link("InternalPacketReceived")]
     public void OnInternalReceivedEnd(TData data)
     {
-        EndIncomingPacket(data);
+        EndIncomingInternal(data);
 
         ReleaseData(data);
     }
@@ -119,7 +119,7 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
     [Link("InternalSend")]
     public void OnInternalSendEnd(TState state, TData data)
     {
-        EndOutgoingPacket(data);
+        EndOutgoingInternal(data);
     }
 
     [Priority(0.2)]

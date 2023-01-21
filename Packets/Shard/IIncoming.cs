@@ -1,105 +1,75 @@
-﻿using Core.Abstract.Attributes;
-using Packets.Attributes.Incoming;
-using Packets.Shard.Domain;
-using Packets.Shard.Features;
-using Packets.Shared;
-using Packets.Shared.Features;
+﻿using Packets.Attributes.Incoming;
 
-namespace Packets.Shard
+// ReSharper disable once CheckNamespace
+namespace Packets.Shard.Domain;
+
+public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray>
 {
-    [Entity("Shard", "Server")]
-    public interface IIncoming<in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray> :
-        ITransfer<TData>,
-        ICityList,
-        IGameTime,
-        IName,
-        IPassword,
-        IAccessKey
-        where TState : IState<TData, TAccount, TMobile, TMobileCollection, TMap, TSkill, TSkillArray>
-        where TData : IData
-        where TAccount : IAccount<TMobile, TMobileCollection>
-        where TMobile : IMobile<TMap, TSkill, TSkillArray>
-        where TMobileCollection : ICollection<TMobile>
-        where TMap : IMap
-        where TSkill : ISkill
-        where TSkillArray : IReadOnlyList<TSkill>
+    [Packet(0x02)]
+    public void OnPacketRequestMove(TState state, TData data)
     {
-        [InternalPacket(0x00)]
-        public void OnInternalShardAuthorization(TData data)
-        {
-            ReadName(data);
+        state.ReadDirection(data);
 
-            ReadPassword(data);
+        state.ReadStatus(data);
+    }
 
-            ReadAccessKey(data);
-        }
+    [Packet(0x06)]
+    public void OnPacketRequestObjectUse(TState state, TData data)
+    {
+        state.ReadTarget(data);
+    }
 
-        [Packet(0x02)]
-        public void OnPacketRequestMove(TState state, TData data)
-        {
-            state.ReadDirection(data);
+    [Packet(0x34)]
+    public void OnPacketClientQuery(TState state, TData data)
+    {
+        state.ReadPattern(data);
 
-            state.ReadStatus(data);
-        }
+        state.ReadMode(data);
 
-        [Packet(0x06)]
-        public void OnPacketRequestObjectUse(TState state, TData data)
-        {
-            state.ReadTarget(data);
-        }
+        state.ReadTarget(data);
+    }
 
-        [Packet(0x34)]
-        public void OnPacketClientQuery(TState state, TData data)
-        {
-            state.ReadPattern(data);
+    [Packet(0x5D)]
+    public void OnPacketPreLogin(TState state, TData data)
+    {
+        state.ReadPattern(data);
 
-            state.ReadMode(data);
+        state.ReadName(data);
 
-            state.ReadTarget(data);
-        }
+        state.ReadPassword(data);
 
-        [Packet(0x5D)]
-        public void OnPacketPreLogin(TState state, TData data)
-        {
-            state.ReadPattern(data);
+        state.ReadCharacterSlot(data);
 
-            state.ReadName(data);
+        state.ReadSeed(data);
+    }
 
-            state.ReadPassword(data);
+    [Packet(0x72)]
+    public void OnPacketCombatRequest(TState state, TData data)
+    {
+        state.ReadCombat(data);
+    }
 
-            state.ReadCharacterSlot(data);
+    [Packet(0x73)]
+    public void OnPacketPingRequest(TState state, TData data)
+    {
+        state.ReadPing(data);
+    }
 
-            state.ReadSeed(data);
-        }
+    [Packet(0x91)]
+    public void OnPacketPostLogin(TState state, TData data)
+    {
+        state.ReadAccessKey(data);
 
-        [Packet(0x72)]
-        public void OnPacketCombatRequest(TState state, TData data)
-        {
-            state.ReadCombat(data);
-        }
+        state.ReadName(data);
 
-        [Packet(0x73)]
-        public void OnPacketPingRequest(TState state, TData data)
-        {
-            state.ReadPing(data);
-        }
+        state.ReadPassword(data);
+    }
 
-        [Packet(0x91)]
-        public void OnPacketPostLogin(TState state, TData data)
-        {
-            state.ReadAccessKey(data);
+    [Packet(0xA7)]
+    public void OnPacketRequestTip(TState state, TData data)
+    {
+        state.ReadTipRequest(data);
 
-            state.ReadName(data);
-
-            state.ReadPassword(data);
-        }
-
-        [Packet(0xA7)]
-        public void OnPacketRequestTip(TState state, TData data)
-        {
-            state.ReadTipRequest(data);
-
-            state.ReadDirection(data);
-        }
+        state.ReadDirection(data);
     }
 }

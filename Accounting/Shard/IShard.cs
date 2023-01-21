@@ -26,12 +26,12 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
 
     TAccount LeaseAccount();
 
-    void InternalShardAccountOnline(TState state);
+    void InternalAccountOnline(TState state);
 
-    void InternalShardAccountOffline(TState state);
+    void InternalAccountOffline(TState state);
 
     [Priority(0.9)]
-    public void OnInternalShardAuthorization()
+    public void OnInternalAuthorization()
     {
         var account = Accounts.SingleOrDefault(a => Is.Equal(a.Name, Name))!;
 
@@ -60,7 +60,7 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
 
             Online.Add(account);
 
-            InternalShardAccountOnline(state);
+            InternalAccountOnline(state);
         }
     }
 
@@ -76,7 +76,7 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
     {
         Online.Remove(state.Account);
 
-        InternalShardAccountOffline(state);
+        InternalAccountOffline(state);
 
         state.Account = default!;
     }

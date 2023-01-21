@@ -21,7 +21,7 @@ public interface ILogin<TState, TShard, TAccount, out TAccountCollection>
 
     TAccountCollection Online { get; }
 
-    void InternalShardAuthorization(TState state);
+    void InternalAuthorization(TState state);
 
     [Priority(0.9)]
     public void OnPacketAccountLoginRequest(TState state)
@@ -46,11 +46,11 @@ public interface ILogin<TState, TShard, TAccount, out TAccountCollection>
     {
         state.Account.GenerateAccessKey();
 
-        InternalShardAuthorization(state);
+        InternalAuthorization(state);
     }
 
     [Priority(1.0)]
-    public void OnInternalShardAccountOnline()
+    public void OnInternalAccountOnline()
     {
         var account = Accounts.Single(a => Is.Equal(a.Name, Name));
 #if DEBUG
@@ -60,7 +60,7 @@ public interface ILogin<TState, TShard, TAccount, out TAccountCollection>
     }
 
     [Priority(1.0)]
-    public void OnInternalShardAccountOffline()
+    public void OnInternalAccountOffline()
     {
         var account = Accounts.Single(a => Is.Equal(a.Name, Name));
 #if DEBUG
