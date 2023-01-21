@@ -1,19 +1,9 @@
-﻿using Core.Abstract.Attributes;
-using Packets.Attributes.Outgoing;
-using Packets.Login.Domain;
-using Packets.Login.Features;
-using Packets.Shared;
+﻿using Packets.Attributes.Outgoing;
 
-namespace Packets.Login;
+// ReSharper disable once CheckNamespace
+namespace Packets.Login.Domain;
 
-[Entity("Login", "Server")]
-public interface IOutgoing<TState, TData, TShard, out TShardCollection, TAccount> :
-    IShardList<TShard, TShardCollection>
-    where TState : IState<TData, TAccount, TShard>
-    where TData : IData
-    where TShard : IShard<TData>
-    where TShardCollection : ICollection<TShard>
-    where TAccount : IAccount
+public partial interface ILogin<TState, TData, TShard, out TShardCollection, TAccount>
 {
     [InternalShardPacket(0x00)]
     public void OnInternalShardAuthorization(TState state, TData data)

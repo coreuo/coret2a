@@ -1,5 +1,4 @@
 ﻿using Core.Abstract.Attributes;
-using Packets.Attributes.Outgoing;
 using Packets.Login.Features;
 using Packets.Shared;
 using Packets.Shared.Features;
@@ -7,10 +6,17 @@ using Packets.Shared.Features;
 namespace Packets.Login.Domain;
 
 [Entity("Login", "Server")]
-public interface ILogin<TState, TData, TShard, TAccount>
+public partial interface ILogin<TState, TData, TShard, out TShardCollection, TAccount> :
+    IName,
+    IPassword,
+    IEndPoint,
+    IStatus,
+    ITransfer<TData>,
+    IShardList<TShard, TShardCollection>
     where TState : IState<TData, TAccount, TShard>
     where TData : IData
     where TShard : IShard<TData>
+    where TShardCollection : ICollection<TShard>
     where TAccount : IAccount
 {
 #if DEBUG
