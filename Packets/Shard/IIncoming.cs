@@ -5,6 +5,18 @@ namespace Packets.Shard.Domain;
 
 public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray>
 {
+    #region Internal
+    [InternalPacket(0x00)]
+    public void OnInternalAuthorization(TData data)
+    {
+        ReadName(data);
+
+        ReadPassword(data);
+
+        ReadAccessKey(data);
+    }
+    #endregion
+
     [Packet(0x02)]
     public void OnPacketRequestMove(TState state, TData data)
     {
@@ -71,5 +83,20 @@ public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile,
         state.ReadTipRequest(data);
 
         state.ReadDirection(data);
+    }
+
+    [Packet(0xB8)]
+    [Sized]
+    public void OnPacketCharacterProfileRequest(TState state, TData data)
+    {
+        state.ReadMode(data);
+
+        state.ReadTarget(data);
+
+        if (state.Mode == 0) return;
+
+        state.ReadCommand(data);
+
+        state.ReadText(data);
     }
 }

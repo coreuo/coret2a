@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection.Metadata;
@@ -19,7 +20,7 @@ namespace Core.Generator.Domain.Members.Methods
 
         public override string GroupName => Link ?? base.GroupName;
 
-        public (string method, string subject, string property, int value) Case { get; }
+        public Case Case { get; }
 
         public ImmutableArray<(string method, string parameter, int value)> Also { get; }
 
@@ -38,7 +39,7 @@ namespace Core.Generator.Domain.Members.Methods
             Case = attributes
                 .Where(a => a.IsAttribute("CaseAttribute") && a.ConstructorArguments.Length == 4)
                 .Select(a => a.ConstructorArguments[3].Value is int value
-                    ? (a.ConstructorArguments[0].Value as string,
+                    ? new Case(a.ConstructorArguments[0].Value as string,
                         a.ConstructorArguments[1].Value as string,
                         a.ConstructorArguments[2].Value as string,
                         value)
@@ -64,7 +65,7 @@ namespace Core.Generator.Domain.Members.Methods
 
         public IEnumerable<Call> ResolveCalls(IEnumerable<(string fullType, string type, string name)> parameters)
         {
-            yield return new Call(Priority ?? 0.0, $"{ResolveHandler()}.{Name}", new[] { (Object.Name, Object.Name, "this") }.Concat(parameters.Skip(1)));
+            yield return new Call(Priority ?? 0.0, Name.Substring(2), $"{ResolveHandler()}.{Name}", new[] { (Object.Name, Object.Name, "this") }.Concat(parameters.Skip(1)));
 
             foreach (var call in ResolveAdditionalCalls()) yield return call;
         }
@@ -128,21 +129,42 @@ namespace Core.Generator.Domain.Members.Methods
             {
                 var calls = Members
                     .Where(m => m.Case != default && m.Priority != null)
-                    .Select(m => (m, c: m.Case))
-                    .SelectMany(p => ResolveCaseCall(p.c));
+                    .SelectMany(m => ResolveCaseCall(m));
 
-                foreach (var call in calls) yield return call;
+                foreach (var call in calls)
+                    yield return call;
             }
 
-            private IEnumerable<Call> ResolveCaseCall((string method, string subject, string property, int value) @case)
+            private IEnumerable<Call> ResolveCaseCall(ObjectMethodMember member, Case parent = null)
             {
                 foreach (var call in ResolveSelfCalls())
                 {
-                    call.Caller = @case.method;
+                    call.Caller = member.Case.Method;
 
-                    call.Case = (@case.subject, @case.property, @case.value);
+                    call.Case = member.Case;
 
                     yield return call;
+                }
+
+                var nested = Object
+                    .MethodMembers
+                    .OfType<ObjectMethodMerge>()
+                    .SelectMany(mr => mr.Members
+                        .Where(mb => mb.Case?.Method == member.GroupName)
+                        .Select(mb => new { Merge = mr, Member = mb }));
+
+                foreach (var item in nested)
+                {
+                    var calls = item.Merge.ResolveCaseCall(item.Member, member.Case);
+
+                    foreach (var call in calls)
+                    {
+                        call.Caller = member.Case.Method;
+
+                        call.Case = new Case(member.Case, call.Case);
+
+                        yield return call;
+                    }
                 }
             }
         }

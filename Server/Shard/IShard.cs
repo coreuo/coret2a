@@ -92,23 +92,17 @@ public interface IShard<in TState, TAccount, TMobile>
     }
 
     [Priority(1.0)]
-    public void OnPacketClientQuery(TState state)
+    [Case("PacketClientQuery", "state", "Mode", 0x04)]
+    public void OnPacketClientQueryMobileStatus(TState state)
     {
-        switch (state.Mode)
-        {
-            case 0x04:
-            {
-                PacketMobileStatus(state);
+        PacketMobileStatus(state);
+    }
 
-                return;
-            }
-            case 0x05:
-            {
-                PacketSkills(state);
-
-                return;
-            }
-        }
+    [Priority(1.0)]
+    [Case("PacketClientQuery", "state", "Mode", 0x05)]
+    public void OnPacketClientQuerySkills(TState state)
+    {
+        PacketSkills(state);
     }
 
     [Priority(1.0)]

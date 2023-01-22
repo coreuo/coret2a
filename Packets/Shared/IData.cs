@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Drawing;
+using System.Net;
 using System.Text;
 using Core.Abstract.Attributes;
 using Core.Abstract.Extensions;
@@ -101,12 +102,22 @@ public interface IData
     }
 
     private static readonly Decoder AsciiDecoder = Encoding.ASCII.GetDecoder();
+    private static readonly Decoder BigUnicodeDecoder = Encoding.BigEndianUnicode.GetDecoder();
 
     internal void ReadAscii(Span<char> buffer, int length)
     {
         AsciiDecoder.Convert(Value.Slice(Start + Offset, length), buffer, true, out _, out _, out _);
 #if DEBUG
         Debug($"{Offset:D3} ASCII   {buffer.AsText()}");
+#endif
+        Offset += length;
+    }
+
+    internal void ReadBigUnicode(Span<char> buffer, int length)
+    {
+        BigUnicodeDecoder.Convert(Value.Slice(Start + Offset, 2 * length), buffer, true, out _, out _, out _);
+#if DEBUG
+        Debug($"{Offset:D3} UNICODE {buffer.AsText()}");
 #endif
         Offset += length;
     }
@@ -233,15 +244,62 @@ public interface IData
     }
 
     private static readonly Encoder AsciiEncoder = Encoding.ASCII.GetEncoder();
+    private static readonly Encoder BigUnicodeEncoder = Encoding.BigEndianUnicode.GetEncoder();
 
-    internal void WriteAscii(ReadOnlySpan<char> text, int size)
+    internal void WriteAscii(Span<char> text, int size)
     {
 #if DEBUG
         Debug($"{Offset:D3} ASCII   {text}");
 #endif
-        WriteText(AsciiEncoder, text, size);
+        Offset += WriteText(AsciiEncoder, text, size);
+    }
+
+    internal int WriteAscii(Span<char> text)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} ASCII   {text}");
+#endif
+        var size = WriteText(AsciiEncoder, text.AsText());
 
         Offset += size;
+
+        return size;
+    }
+
+    public int WriteAsciiTerminated(Span<char> text)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} ASCII   {text}");
+#endif
+        var size = WriteText(AsciiEncoder, text.AsText(), terminated: 1);
+
+        Offset += size;
+
+        return size;
+    }
+
+    internal int WriteBigUnicode(Span<char> text)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} UNICODE {text}");
+#endif
+        var size = WriteText(BigUnicodeEncoder, text.AsText());
+
+        Offset += size;
+
+        return size;
+    }
+
+    internal int WriteBigUnicodeTerminated(Span<char> text)
+    {
+#if DEBUG
+        Debug($"{Offset:D3} UNICODE {text}");
+#endif
+        var size = WriteText(BigUnicodeEncoder, text.AsText(), terminated: 2);
+
+        Offset += size;
+
+        return size;
     }
 
     private int WriteText(Encoder encoder, ReadOnlySpan<char> text, int? size = null, int terminated = 0)

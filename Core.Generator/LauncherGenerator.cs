@@ -47,7 +47,7 @@ namespace Core.Generator
                         null,
                         $"{e}"));
 
-                //throw;
+                throw;
             }
         }
     }

@@ -20,7 +20,9 @@ public interface ICharacterList<TCharacter, out TCharacterCollection>
         {
             character.WriteName(data);
 
-            data.WriteAscii("", 30);
+            data.Offset += 30;
+
+            //data.WriteAscii("", 30);
 
             index++;
         }

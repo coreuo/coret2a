@@ -19,7 +19,9 @@ public interface IState<TData, out TAccount, out TMobile, out TMobileCollection,
     IPattern,
     IMode,
     IExpansions,
-    IPing
+    IPing,
+    ICommand,
+    IText
     where TData : IData
     where TAccount : IAccount<TMobile, TMobileCollection>
     where TMobile : IMobile<TMap, TSkill, TSkillArray>

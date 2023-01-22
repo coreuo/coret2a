@@ -18,4 +18,10 @@ public interface IName
     {
         data.WriteAscii(Name, 30);
     }
+
+    internal void WriteNameTerminated<TData>(TData data)
+        where TData : IData
+    {
+        data.WriteAsciiTerminated(Name);
+    }
 }

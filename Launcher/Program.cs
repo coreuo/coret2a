@@ -56,7 +56,13 @@ static (LoginServer, ShardServer) Initialize(Save save)
 
     var character = save.MobileStore.Lease();
 
-    "Captain Jack".CopyTo(character.Name);
+    "Captain ".CopyTo(character.Title);
+
+    "Jack".CopyTo(character.Name);
+
+    "Jack's diary".CopyTo(character.StaticProfileText);
+
+    "Nothing is there.".CopyTo(character.DynamicProfileText);
 
     character.Body = 0x190;
 

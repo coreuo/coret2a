@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 
 namespace Core.Generator.Domain
 {
@@ -152,40 +153,47 @@ namespace Launcher.Domain;";
             return !MethodMembers.Any() ? string.Empty : $@"
 {string.Join(Environment.NewLine, MethodMembers.Where(m => m.HasDeclaration()).Select(m => $@"
     public {m.ResolveDeclaration()}
-    {{{GetMethodBodyCode(m)}
+    {{{GetMethodBodyCode(m, m.Parameters.ToImmutableHashSet())}
     }}"))}";
         }
 
-        protected virtual string GetMethodBodyCode(MethodMember.MethodMerge method)
+        protected virtual string GetMethodBodyCode(MethodMember.MethodMerge method, ImmutableHashSet<(string fullType, string type, string name)> parameters)
         {
             if (!Calls.TryGetValue(method.Name, out var calls)) return string.Empty;
-
-            var declaredParameters = method.Parameters.ToImmutableHashSet();
 
             var leasing = calls
                 .Where(c => c.MethodMerge is ObjectMethodMember.ObjectMethodMerge)
                 .SelectMany(c => c.Parameters.Skip(1).Where(p => c.Also.parameter != p.name))
-                .Where(p => !declaredParameters.Contains(p))
+                .Where(p => !parameters.Contains(p))
                 .Distinct()
                 .Select(p => $@"
         {p.type} {p.name} = Save.{p.type}Store.Lease();");
 
+            return string.Join(Environment.NewLine, leasing.Concat(GetSwitchCode(calls.Select(c => (c, c.Case)))));
+        }
+
+        private static IEnumerable<string> GetSwitchCode(IEnumerable<(Call call, Case @case)> calls, int nested = 0)
+        {
+            var indention = "        ";
+
+            for (var i = 0; i < nested; i++) indention = $"        {indention}";
+
             var groups = calls
-                .GroupBy(c => (c.Priority, c.Case.subject, c.Case.property))
+                .GroupBy(p => (p.call.Priority, p.@case?.Subject, p.@case?.Property))
                 .OrderBy(g => g.Key.Priority)
-                .Select(g => g.Key.property == null ? string.Join(Environment.NewLine, g.Select(c => $@"
-        {c.GetCode()}")) : $@"
-        switch({(g.Key.subject == null ? string.Empty : $"{g.Key.subject}.")}{g.Key.property})
-        {{{string.Join(string.Empty, g.OrderBy(c => c.Case.value).Select(c => $@"
-            case {c.Case.value}:
-            {{
-                {c.GetCode()}
+                .Select(g => g.Key.Property == null ? string.Join(Environment.NewLine, g.Select(p => $@"
+{indention}{p.call.GetCode()}")) : $@"
+{indention}switch({(g.Key.Subject == null ? string.Empty : $"{g.Key.Subject}.")}{g.Key.Property})
+{indention}{{{string.Join(string.Empty, g.GroupBy(p => p.@case.Value).OrderBy(gc => gc.Key).Select(gc => $@"
+{indention}    case {gc.Key}:
+{indention}    {{{(gc.Count() == 1 ? $@"
+{indention}        {gc.Single().call.GetCode()}" : string.Join(Environment.NewLine, GetSwitchCode(gc.Select(p => (p.call, p.@case.Nested)), nested + 1)))}
 
-                break;
-            }}"))}
-        }}");
+{indention}        break;
+{indention}    }}"))}
+{indention}}}");
 
-            return string.Join(Environment.NewLine, leasing.Concat(groups));
+            return groups;
         }
 
         protected virtual string GetMetaCode()

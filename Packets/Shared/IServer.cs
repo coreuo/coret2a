@@ -65,6 +65,13 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
         }
     }
 
+    [Priority(0.001)]
+    [Link("ReceiveSize")]
+    public void OnReceiveSizeBegin(TState state, TData data)
+    {
+        data.OffsetSize();
+    }
+
     [Priority(0.01)]
     [Link("InternalSend")]
     public void OnInternalSendBegin(TState state, TData data, byte id)
@@ -81,7 +88,7 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
 
     [Priority(0.02)]
     [Link("SendSize")]
-    public void OnSizeBegin(TState state, TData data)
+    public void OnSendSizeBegin(TState state, TData data)
     {
         data.OffsetSize();
     }
@@ -131,7 +138,7 @@ public interface IServer<in TState, TData, out TDataConcurrentQueue> : ITransfer
 
     [Priority(0.3)]
     [Link("SendSize")]
-    public void OnSizeEnd(TState state, TData data)
+    public void OnSendSizeEnd(TState state, TData data)
     {
         data.WriteSize((ushort)data.Length);
     }

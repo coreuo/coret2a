@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Compression", "Compression\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Server\Server.csproj", "{6E83499C-2C55-4AD9-93D9-ED3E08947C3D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scripts", "Scripts\Scripts.csproj", "{D99AB113-77DD-45E0-854F-A04008303E57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,10 @@ Global
 		{6E83499C-2C55-4AD9-93D9-ED3E08947C3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E83499C-2C55-4AD9-93D9-ED3E08947C3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E83499C-2C55-4AD9-93D9-ED3E08947C3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D99AB113-77DD-45E0-854F-A04008303E57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D99AB113-77DD-45E0-854F-A04008303E57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D99AB113-77DD-45E0-854F-A04008303E57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D99AB113-77DD-45E0-854F-A04008303E57}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

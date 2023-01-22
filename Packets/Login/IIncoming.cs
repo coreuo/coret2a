@@ -5,6 +5,20 @@ namespace Packets.Login.Domain;
 
 public partial interface ILogin<TState, TData, TShard, out TShardCollection, TAccount>
 {
+    #region Iternal
+    [InternalPacket(0x01)]
+    public void OnInternalAccountOnline(TData data)
+    {
+        ReadName(data);
+    }
+
+    [InternalPacket(0x02)]
+    public void OnInternalAccountOffline(TData data)
+    {
+        ReadName(data);
+    }
+    #endregion
+
     [Packet(0x80)]
     public void OnPacketAccountLoginRequest(TState state, TData data)
     {

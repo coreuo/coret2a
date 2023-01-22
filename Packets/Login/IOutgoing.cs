@@ -5,6 +5,18 @@ namespace Packets.Login.Domain;
 
 public partial interface ILogin<TState, TData, TShard, out TShardCollection, TAccount>
 {
+    #region Iternal
+    [InternalShardPacket(0x00)]
+    public void OnInternalAuthorization(TState state, TData data)
+    {
+        state.Account.WriteName(data);
+
+        state.Account.WritePassword(data);
+
+        state.Account.WriteAccessKey(data);
+    }
+    #endregion
+
     [Packet(0x82)]
     public void OnPacketAccountLoginFailed(TState state, TData data)
     {

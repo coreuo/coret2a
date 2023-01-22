@@ -5,6 +5,20 @@ namespace Packets.Shard.Domain;
 
 public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile, out TMobileCollection, TMap, TSkill, TSkillArray>
 {
+    #region Internal
+    [InternalLoginPacket(0x01)]
+    public void OnInternalAccountOnline(TState state, TData data)
+    {
+        state.Account.WriteName(data);
+    }
+
+    [InternalLoginPacket(0x02)]
+    public void OnInternalAccountOffline(TState state, TData data)
+    {
+        state.Account.WriteName(data);
+    }
+    #endregion
+
     [Packet(0x11)]
     [Sized]
     public void OnPacketMobileStatus(TState state, TData data)
@@ -222,9 +236,7 @@ public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile,
 
         character.WriteId(data);
 
-        character.WriteName(data);
-
-        data.Offset += 30;
+        character.WriteFullName(data);
 
         character.WriteStatus(data);
     }
@@ -236,5 +248,20 @@ public partial interface IShard<out TLogin, in TState, TData, TAccount, TMobile,
         state.Account.WriteCharacters(data);
 
         WriteCities(data);
+    }
+
+    [Packet(0xB8)]
+    [Sized]
+    public void OnPacketCharacterProfileResponse(TState state, TMobile mobile, TData data)
+    {
+        mobile.WriteId(data);
+
+        data.WriteAsciiTerminated(mobile.Name);
+
+        data.WriteBigUnicodeTerminated(mobile.StaticProfileText);
+
+        data.WriteBigUnicodeTerminated(mobile.DynamicProfileText);
+
+        //data.WriteUShort(0x3300);
     }
 }

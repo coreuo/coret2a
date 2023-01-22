@@ -15,16 +15,7 @@ public interface IState<out TAccount, TMobile>
 
     int Target { get; }
 
-    byte Mode { get; }
-
     bool Combat { get; }
-
-    byte Ping { get; set; }
-
-    internal void TransferName()
-    {
-        Character.Name.CopyTo(Name);
-    }
 
     internal void TransferCombat()
     {

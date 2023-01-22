@@ -16,7 +16,8 @@ public interface IMobile<TMap, TSkill, TSkillArray> : IMobile,
 
 [Entity("Mobile")]
 public interface IMobile : 
-    IName,
+    IProfile,
+    IFullName,
     IPassword,
     ISunlight,
     ILight,

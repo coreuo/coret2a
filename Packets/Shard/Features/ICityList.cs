@@ -11,8 +11,14 @@ public interface ICityList
 
         data.WriteByte(0);
 
-        data.WriteAscii("Ocllo".AsSpan(), 31);
+        Span<char> buffer = stackalloc char[30];
 
-        data.WriteAscii("Bountiful Harvest".AsSpan(), 31);
+        "Ocllo".CopyTo(buffer);
+
+        data.WriteAscii(buffer, 31);
+
+        "Bountiful Harvest".CopyTo(buffer);
+
+        data.WriteAscii(buffer, 31);
     }
 }

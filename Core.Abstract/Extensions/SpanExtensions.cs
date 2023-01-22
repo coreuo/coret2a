@@ -7,17 +7,8 @@ public static class SpanExtensions
 {
     public static unsafe ReadOnlySpan<char> AsText(this Span<char> span)
     {
-        var p = Unsafe.AsPointer(ref span.GetPinnableReference());
+        var p = (char*)Unsafe.AsPointer(ref span.GetPinnableReference());
 
-        return MemoryMarshal.CreateReadOnlySpanFromNullTerminated((char*)p);
-    }
-
-    public static unsafe ReadOnlySpan<char> AsText(this ReadOnlySpan<char> span)
-    {
-        var reference = span.GetPinnableReference();
-
-        var p = Unsafe.AsPointer(ref reference);
-
-        return MemoryMarshal.CreateReadOnlySpanFromNullTerminated((char*)p);
+        return MemoryMarshal.CreateReadOnlySpanFromNullTerminated(p);
     }
 }
