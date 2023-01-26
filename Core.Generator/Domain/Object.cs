@@ -185,8 +185,8 @@ namespace Launcher.Domain;";
 {indention}{p.call.GetCode()}")) : $@"
 {indention}switch({(g.Key.Subject == null ? string.Empty : $"{g.Key.Subject}.")}{g.Key.Property})
 {indention}{{{string.Join(string.Empty, g.GroupBy(p => p.@case.Value).OrderBy(gc => gc.Key).Select(gc => $@"
-{indention}    case {gc.Key}:
-{indention}    {{{(gc.Count() == 1 ? $@"
+{indention}    case {(gc.Key is bool ? gc.Key.ToString().ToLower() : gc.Key)}:
+{indention}    {{{(gc.Count() == 1 && gc.Single().@case?.Nested == null ? $@"
 {indention}        {gc.Single().call.GetCode()}" : string.Join(Environment.NewLine, GetSwitchCode(gc.Select(p => (p.call, p.@case.Nested)), nested + 1)))}
 
 {indention}        break;

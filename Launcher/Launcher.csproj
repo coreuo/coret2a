@@ -7,15 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Accounting\Accounting.csproj" />
-    <ProjectReference Include="..\Compression\Compression.csproj" />
     <ProjectReference Include="..\Core.Launcher\Core.Launcher.csproj" />
     <ProjectReference Include="..\Core.Generator\Core.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\Encryption\Encryption.csproj" />
-    <ProjectReference Include="..\Network\Network.csproj" />
-    <ProjectReference Include="..\Packets\Packets.csproj" />
     <ProjectReference Include="..\Scripts\Scripts.csproj" />
-    <ProjectReference Include="..\Server\Server.csproj" />
   </ItemGroup>
 
 </Project>

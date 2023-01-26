@@ -20,5 +20,5 @@ public interface IState<TAccount, in TCharacter, TCharacterCollection>
 
     byte Status { set; }
 
-    int Slot { get; }
+    uint Slot { get; }
 }

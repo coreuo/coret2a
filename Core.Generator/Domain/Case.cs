@@ -11,11 +11,11 @@ namespace Core.Generator.Domain
 
         public string Property { get; }
 
-        public int Value { get; }
+        public object Value { get; }
 
         public Case Nested { get; set; }
 
-        public Case(string method, string subject, string property, int value)
+        public Case(string method, string subject, string property, object value)
         {
             Method = method;
             Subject = subject;

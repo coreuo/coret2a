@@ -46,11 +46,6 @@ public struct {Name} : IEntity<Save, {Name}>{GetInheritanceCode()}
         Pointer = pointer;
     }}{GetMethodsCode()}{GetMetaCode()}
 
-    public static int GetPoolCapacity()
-    {{
-        return 10000;
-    }}
-
     public static {Name} Create(Save save, int id, Pointer pointer)
     {{
         return new {Name}(save, id, pointer);
@@ -61,6 +56,17 @@ public struct {Name} : IEntity<Save, {Name}>{GetInheritanceCode()}
         return $""{{Id}} {{base.ToString()}}"";
     }}
 }}";
+        }
+
+        protected override string GetMetaCode()
+        {
+            return $@"{base.GetMetaCode()}
+    public const int Capacity = 10000;
+
+    public static int GetCapacity()
+    {{
+        return Capacity;
+    }}";
         }
     }
 }

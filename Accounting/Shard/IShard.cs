@@ -68,7 +68,7 @@ public interface IShard<in TState, TAccount, out TAccountCollection, TCharacter,
     public void OnPacketPreLogin(TState state)
     {
         if (state.Slot < state.Account.Characters.Count)
-            state.Character = state.Account.Characters.ElementAt(state.Slot);
+            state.Character = state.Account.Characters.ElementAt((int)state.Slot);
     }
 
     [Priority(0.9)]

@@ -13,106 +13,15 @@ public interface IShard<in TState, TAccount, TMobile>
 
     void Slice();
 
-    void PacketCitiesAndCharacters(TState state);
-
-    void PacketLoginConfirm(TState state);
-
-    void PacketZMove(TState state);
-
-    void PacketSunlight(TState state);
-
-    void PacketLight(TState state);
-
-    void PacketCombatResponse(TState state);
-
     void PacketPingResponse(TState state);
 
-    void PacketEquippedMobile(TState state);
-
-    void PacketLoginComplete(TState state);
-
-    void PacketWeatherChange(TState state);
-
-    void PacketGameTime(TState state);
-
-    void PacketOkMove(TState state);
-
-    void PacketOpenPaperDoll(TState state);
-
     void PacketSkills(TState state);
-
-    void PacketNakedMobile(TState state);
-
-    void PacketMobileStatus(TState state);
-
-    [Priority(1.0)]
-    public void OnPacketPostLogin(TState state)
-    {
-        if (Is.Default(state.Account)) throw new InvalidOperationException("Invalid account.");
-
-        PacketCitiesAndCharacters(state);
-    }
-
-    [Priority(1.0)]
-    public void OnPacketPreLogin(TState state)
-    {
-        if (Is.Default(state.Account)) throw new InvalidOperationException("Invalid account.");
-
-        PacketLoginConfirm(state);
-
-        PacketZMove(state);
-
-        PacketSunlight(state);
-
-        PacketLight(state);
-
-        PacketLoginConfirm(state);
-
-        PacketCombatResponse(state);
-
-        PacketEquippedMobile(state);
-
-        PacketLoginComplete(state);
-
-        PacketWeatherChange(state);
-
-        PacketGameTime(state);
-    }
-
-    [Priority(1.0)]
-    public void OnPacketRequestMove(TState state)
-    {
-        PacketOkMove(state);
-    }
-
-    [Priority(1.0)]
-    public void OnPacketRequestObjectUse(TState state)
-    {
-        if (state.IsSelfTargeted()) PacketOpenPaperDoll(state);
-    }
-
-    [Priority(1.0)]
-    [Case("PacketClientQuery", "state", "Mode", 0x04)]
-    public void OnPacketClientQueryMobileStatus(TState state)
-    {
-        PacketMobileStatus(state);
-    }
 
     [Priority(1.0)]
     [Case("PacketClientQuery", "state", "Mode", 0x05)]
     public void OnPacketClientQuerySkills(TState state)
     {
         PacketSkills(state);
-    }
-
-    [Priority(1.0)]
-    public void OnPacketCombatRequest(TState state)
-    {
-        state.TransferCombat();
-
-        PacketNakedMobile(state);
-
-        PacketCombatResponse(state);
     }
 
     [Priority(1.0)]

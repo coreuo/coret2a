@@ -3,18 +3,26 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Immutable;
+using Core.Generator.Domain;
+using Object = System.Object;
 
 namespace Core.Generator.Extensions
 {
     public static class EntityExtensions
     {
-        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveConstructDictionary(this IEnumerable<INamedTypeSymbol> constructs, string name, ImmutableHashSet<string> generalSubjects, string variant = null)
+        public static ImmutableDictionary<ISymbol, ImmutableDictionary<ISymbol, string>> ResolveConstructDictionary(this IEnumerable<INamedTypeSymbol> constructs, Root root, string name, ImmutableHashSet<string> generalSubjects, string variant = null)
         {
-            return constructs.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityOrElementParameter(name, variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
+            return constructs.ToImmutableDictionary(i => i, i => i.TypeParameters.ToImmutableDictionary(p => p, p => p.ResolveEntityOrElementParameter(root, name, variant, generalSubjects), SymbolEqualityComparer.Default), SymbolEqualityComparer.Default);
         }
 
-        public static string ResolveEntityOrElementParameter(this ITypeParameterSymbol parameter, string name, string parentVariant, ImmutableHashSet<string> generalSubjects)
+        public static string ResolveEntityOrElementParameter(this ITypeParameterSymbol parameter, Root root, string name, string parentVariant, ImmutableHashSet<string> generalSubjects)
         {
+            var constraints = parameter.ConstraintTypes
+                .OfType<INamedTypeSymbol>();
+
+            if (!constraints.Any())
+                throw new InvalidOperationException($"Missing object constraint on {parameter} of {parameter.ContainingSymbol}");
+
             var @interface = parameter.ConstraintTypes
                 .OfType<INamedTypeSymbol>()
                 .Single();
@@ -23,7 +31,7 @@ namespace Core.Generator.Extensions
 
             var nested = (ITypeParameterSymbol)@interface.TypeArguments.Single();
 
-            var resolved = nested.ResolveEntityOrElementParameter(name, parentVariant, generalSubjects);
+            var resolved = nested.ResolveEntityOrElementParameter(root, name, parentVariant, generalSubjects);
 
             if (@interface.IsProducerConsumerCollection())
             {

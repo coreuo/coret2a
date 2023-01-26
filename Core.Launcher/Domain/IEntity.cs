@@ -14,7 +14,7 @@ public interface IEntity<TEntity> : IEntity
 {
     public static abstract Property[] GetProperties();
 
-    public static abstract int GetPoolCapacity();
+    public static abstract int GetCapacity();
 }
 
 public interface IEntity : IObject

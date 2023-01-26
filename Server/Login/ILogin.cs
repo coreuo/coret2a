@@ -13,24 +13,4 @@ public interface ILogin<TState, TAccount>
     void Listen();
 
     void Slice();
-
-    void PacketAccountLoginFailed(TState state);
-
-    void PacketBritanniaList(TState state);
-
-    void PacketUserServer(TState state);
-
-    [Priority(1.0)]
-    public void OnPacketAccountLoginRequest(TState state)
-    {
-        if (Is.Default(state.Account)) PacketAccountLoginFailed(state);
-
-        else PacketBritanniaList(state);
-    }
-
-    [Priority(1.0)]
-    public void OnPacketBritanniaSelect(TState state)
-    {
-        PacketUserServer(state);
-    }
 }

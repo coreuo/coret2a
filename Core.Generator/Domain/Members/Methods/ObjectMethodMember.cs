@@ -38,12 +38,11 @@ namespace Core.Generator.Domain.Members.Methods
 
             Case = attributes
                 .Where(a => a.IsAttribute("CaseAttribute") && a.ConstructorArguments.Length == 4)
-                .Select(a => a.ConstructorArguments[3].Value is int value
-                    ? new Case(a.ConstructorArguments[0].Value as string,
-                        a.ConstructorArguments[1].Value as string,
-                        a.ConstructorArguments[2].Value as string,
-                        value)
-                    : default)
+                .Select(a => new Case(
+                    a.ConstructorArguments[0].Value as string,
+                    a.ConstructorArguments[1].Value as string,
+                    a.ConstructorArguments[2].Value as string,
+                    a.ConstructorArguments[3].Value))
                 .SingleOrDefault();
 
             Also = attributes
@@ -131,8 +130,7 @@ namespace Core.Generator.Domain.Members.Methods
                     .Where(m => m.Case != default && m.Priority != null)
                     .SelectMany(m => ResolveCaseCall(m));
 
-                foreach (var call in calls)
-                    yield return call;
+                foreach (var call in calls) yield return call;
             }
 
             private IEnumerable<Call> ResolveCaseCall(ObjectMethodMember member, Case parent = null)

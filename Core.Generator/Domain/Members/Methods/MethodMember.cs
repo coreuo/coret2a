@@ -98,10 +98,16 @@ namespace Core.Generator.Domain.Members.Methods
 
             private IEnumerable<(string fullType, string type, string name)> ResolveParameters()
             {
-                var parameters = Members
+                var declaration = Members
                     .Where(m => m.Original.IsAbstract)
                     .Select(m => string.Join(";", m.Original.Parameters.Select(p => ResolveParameter(m.Interface, p))))
                     .Distinct()
+                    .ToImmutableList();
+
+                if (declaration.Count > 1)
+                    throw new InvalidOperationException($"Multiple declaration of {this.Name} of {this.Object.Name}.");
+
+                var parameters = declaration
                     .SingleOrDefault() ?? string.Join(";", Members
                     .SelectMany(m => m.Original.Parameters.Select(p => ResolveParameter(m.Interface, p)))
                     .Distinct());

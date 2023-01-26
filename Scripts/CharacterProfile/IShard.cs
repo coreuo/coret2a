@@ -9,7 +9,15 @@ namespace Scripts.CharacterProfile
     {
         TMobile Get(int id);
 
+        void PacketOpenPaperDoll(TState state);
+
         void PacketCharacterProfileResponse(TState state, TMobile mobile);
+
+        [Priority(1.0)]
+        public void OnPacketRequestObjectUse(TState state)
+        {
+            if (state.Character.Id == state.Target) PacketOpenPaperDoll(state);
+        }
 
         [Priority(1.0)]
         [Case("PacketCharacterProfileRequest", "state", "Mode", 0x00)]
@@ -22,14 +30,15 @@ namespace Scripts.CharacterProfile
         [Case("PacketCharacterProfileRequest", "state", "Mode", 0x01)]
         public void OnPacketCharacterProfileRequestWrite(TState state)
         {
-            if (state.Target != state.Character.Id)
-                throw new InvalidOperationException("You cannot change someone else character profile.");
         }
 
         [Priority(1.0)]
         [Case("PacketCharacterProfileRequestWrite", "state", "Command", 0x01)]
         public void OnPacketCharacterProfileRequestWriteDynamicProfileText(TState state)
         {
+            //You cannot change someone else character profile.
+            if (state.Target != state.Character.Id) return;
+
             var mobile = Get(state.Target);
 
             var dynamicProfileText = mobile.DynamicProfileText;

@@ -194,7 +194,7 @@ public class Pool<TSave, TEntity> : Pool<TEntity>, IPool<TEntity>/*, IReadOnlyLi
 public abstract class Pool<TEntity> : Pool
     where TEntity : IEntity<TEntity>
 {
-    internal Pool(Schema schema, string? label, bool isSynchronized) : base(schema, Schema.Offset + schema.Size * TEntity.GetPoolCapacity(), label, isSynchronized)
+    internal Pool(Schema schema, string? label, bool isSynchronized) : base(schema, Schema.Offset + schema.Size * TEntity.GetCapacity(), label, isSynchronized)
     {
     }
 

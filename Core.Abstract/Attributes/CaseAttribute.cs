@@ -8,9 +8,9 @@ public class CaseAttribute : Attribute
 
     public string Property { get; }
 
-    public int Value { get; }
+    public object Value { get; }
 
-    public CaseAttribute(string method, string? subject, string property, int value)
+    public CaseAttribute(string method, string? subject, string property, object value)
     {
         Method = method;
         Subject = subject;

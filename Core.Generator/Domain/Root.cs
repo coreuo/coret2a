@@ -70,10 +70,10 @@ namespace Core.Generator.Domain
                 var subject = implementation.Subject;
 
                 if (generalSubjects.Contains(subject))
-                    yield return Object.Create(this, subject, implementation.General.ResolveConstructDictionary(subject, generalSubjects));
+                    yield return Object.Create(this, subject, implementation.General.ResolveConstructDictionary(this, subject, generalSubjects));
                 else
                     foreach (var category in implementation.Categories)
-                        yield return Object.Create(this, $"{category.Variant}{subject}", category.Constructs.Concat(implementation.General).ResolveConstructDictionary($"{category.Variant}{subject}", generalSubjects, category.Variant));
+                        yield return Object.Create(this, $"{category.Variant}{subject}", category.Constructs.Concat(implementation.General).ResolveConstructDictionary(this, $"{category.Variant}{subject}", generalSubjects, category.Variant));
             }
         }
 
